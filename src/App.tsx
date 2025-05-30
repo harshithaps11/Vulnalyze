@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 
-export default function VulnerabilityScanner() {
-  const [code, setCode] = React.useState("");
-  const [result, setResult] = React.useState(null); // null, 'safe', 'warning'
+type ScanResult = "safe" | "warning" | null;
 
-  function scanCode() {
+export default function VulnerabilityScanner(): JSX.Element {
+  const [code, setCode] = useState<string>("");
+  const [result, setResult] = useState<ScanResult>(null);
+
+  function scanCode(): void {
     if (/eval|Access-Control-Allow-Origin|\bDROP TABLE\b/.test(code)) {
       setResult("warning");
     } else if (code.trim() === "") {
@@ -29,7 +31,7 @@ export default function VulnerabilityScanner() {
         className="w-full max-w-3xl h-48 p-4 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 resize-none shadow-sm transition"
         placeholder="Paste your JavaScript / HTML / code here..."
         value={code}
-        onChange={(e) => setCode(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCode(e.target.value)}
       ></textarea>
 
       <button
