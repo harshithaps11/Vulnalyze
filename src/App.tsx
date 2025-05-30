@@ -7,6 +7,7 @@ import { ScanProgress } from './pages/ScanProgress';
 import { ScanResults } from './pages/ScanResults';
 import { Team } from './pages/Team';
 import { NotFound } from './pages/NotFound';
+import { RemediationPage } from './pages/RemediationPage';
 
 function App() {
   return (
@@ -20,7 +21,8 @@ function App() {
             <Route path="/scan/progress/:scanId" element={<ScanProgress />} />
             <Route path="/results" element={<ScanResults />} />
             <Route path="/team" element={<Team />} />
-            <Route path="/reports" element={<Navigate to="/results\" replace />} />
+            <Route path="/remediation" element={<RemediationPage />} />
+            <Route path="/reports" element={<Navigate to="/results" replace />} />
             <Route path="/settings" element={<NotFound />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
