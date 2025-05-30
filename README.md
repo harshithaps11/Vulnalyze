@@ -11,9 +11,7 @@
 - [Existing Solutions Gap](#existing-solutions-gap)
 - [Your Potential Novelty](#your-potential-novelty)
 - [Features](#features)
-- [Installation](#installation)
 - [Usage](#usage)
-- [Contributing](#contributing)
 - [License](#license)
 
 ---
@@ -67,26 +65,6 @@ This project redefines vulnerability scanning by combining advanced detection, i
 
 ---
 
-## Installation
-
-*(Replace with your actual installation instructions.)*
-
-**Prerequisites:**  
-Node.js (latest LTS), Python 3.8+, and a modern web browser.
-
-**Steps to install:**
-1. Clone the repository:
-git clone https://github.com/yourusername/yourproject.git
-
-2. Navigate to the project directory:
-
-3. Install dependencies:
-npm install
-pip install -r requirements.txt
-
-
----
-
 ## Live Demo
 
 [Click here to view the deployed project](https://vulnalyze.netlify.app)
@@ -99,18 +77,6 @@ npm start
 3. **Upload or paste code, explore vulnerabilities, and use the live remediation sandbox.**
 4. **Compete with teammates in Team Warfare Mode for added fun!**
 
-
-## Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. **Fork** the repository.
-2. **Create your feature branch** (`git checkout -b feature/AmazingFeature`).
-3. **Commit your changes** (`git commit -m 'Add some AmazingFeature'`).
-4. **Push to the branch** (`git push origin feature/AmazingFeature`).
-5. **Open a Pull Request.**
-
----
 
 
 
