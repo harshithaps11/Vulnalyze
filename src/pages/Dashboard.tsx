@@ -16,7 +16,7 @@ export function Dashboard() {
           <div className="card bg-gradient-to-r from-primary-900 to-dark-800 border-primary-800">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">Welcome to VulneraXplore</h2>
+                <h2 className="text-2xl font-bold text-white mb-2">Welcome to Vulnalyzer</h2>
                 <p className="text-dark-300">
                   Your comprehensive security vulnerability scanning platform. 
                   Start a scan to discover and remediate security issues.

@@ -39,7 +39,7 @@ export function Header() {
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2">
               <Shield className="h-8 w-8 text-primary-500" />
-              <span className="text-xl font-bold text-white">VulneraXplore</span>
+              <span className="text-xl font-bold text-white">Vulnalyzer</span>
             </Link>
           </div>
 
