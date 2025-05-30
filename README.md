@@ -87,18 +87,18 @@ pip install -r requirements.txt
 
 ---
 
-## Usage
+## Live Demo
 
-*(Replace with your actual usage instructions.)*
+[Click here to view the deployed project](https://vulnalyze.netlify.app)
+## Usage
 
 1. **Start the development server:**
 npm start
-
-2. **Open your browser to `https://vulnalyze.netlify.app**
+2. **Or access the live deployed version here:**  
+[https://vulnalyze.netlify.app](https://vulnalyze.netlify.app)
 3. **Upload or paste code, explore vulnerabilities, and use the live remediation sandbox.**
 4. **Compete with teammates in Team Warfare Mode for added fun!**
 
----
 
 ## Contributing
 
