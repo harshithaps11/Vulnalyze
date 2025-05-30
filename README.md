@@ -94,7 +94,7 @@ pip install -r requirements.txt
 1. **Start the development server:**
 npm start
 
-2. **Open your browser to `https://musical-taiyaki-b313e7.netlify.app/**
+2. **Open your browser to `https://vulnalyze.netlify.app**
 3. **Upload or paste code, explore vulnerabilities, and use the live remediation sandbox.**
 4. **Compete with teammates in Team Warfare Mode for added fun!**
 
