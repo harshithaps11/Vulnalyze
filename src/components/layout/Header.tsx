@@ -11,7 +11,8 @@ import {
   Settings, 
   ChevronDown,
   LogOut,
-  Bell
+  Bell,
+  Code
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { currentUser } from '../../data/mockData';
@@ -28,6 +29,7 @@ export function Header() {
     { name: 'Scan', icon: <Search size={20} />, path: '/scan' },
     { name: 'Reports', icon: <FileText size={20} />, path: '/reports' },
     { name: 'Team', icon: <Users size={20} />, path: '/team' },
+    { name: 'Remediation', icon: <Code size={20} />, path: '/remediation' },
     { name: 'Settings', icon: <Settings size={20} />, path: '/settings' },
   ];
 

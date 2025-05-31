@@ -77,3 +77,68 @@ export interface ScanConfiguration {
     excludePaths?: string[];
   };
 }
+
+
+// types/index.ts
+export interface VulnerabilityNode {
+  id: string;
+  type: 'vulnerability' | 'asset' | 'attack_vector';
+  name: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  cve?: string;
+  description: string;
+  x?: number;
+  y?: number;
+}
+
+export interface VulnerabilityEdge {
+  id: string;
+  source: string;
+  target: string;
+  relationship: 'exploits' | 'leads_to' | 'requires' | 'mitigates';
+  weight: number;
+}
+
+export interface Comment {
+  id: string;
+  vulnerabilityId: string;
+  author: string;
+  content: string;
+  timestamp: Date;
+  mentions: string[];
+  resolved: boolean;
+}
+
+export interface PayloadTest {
+  id: string;
+  name: string;
+  payload: string;
+  type: 'xss' | 'sql_injection' | 'command_injection' | 'custom';
+  timestamp: Date;
+  result?: 'vulnerable' | 'safe' | 'error';
+  response?: string;
+}
+
+export interface ScanResult {
+  id: string;
+  vulnerability: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  file: string;
+  line: number;
+  code: string;
+  description: string;
+  fix_suggestion?: string;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export type TabId = 'sandbox' | 'visualization' | 'explainer' | 'collaboration' | 'payload';
+
+export interface Tab {
+  id: TabId;
+  label: string;
+  icon: React.ComponentType<any>;
+}

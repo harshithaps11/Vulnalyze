@@ -11,9 +11,7 @@
 - [Existing Solutions Gap](#existing-solutions-gap)
 - [Your Potential Novelty](#your-potential-novelty)
 - [Features](#features)
-- [Installation](#installation)
 - [Usage](#usage)
-- [Contributing](#contributing)
 - [License](#license)
 
 ---
@@ -48,7 +46,7 @@ This project redefines vulnerability scanning by combining advanced detection, i
 ### AI-Powered Context Analysis
 
 - **LLM-based vulnerability explanation**
-- **Implementation:** Hugging Face Transformers API
+- **Implementation:** Open router API
 
 ### Team Warfare Mode
 
@@ -58,33 +56,32 @@ This project redefines vulnerability scanning by combining advanced detection, i
 ---
 
 ## Features
+--OWASP Top 10 Scanning
+--Detects the most critical web vulnerabilities using both static and dynamic analysis.
 
-- **Live, in-browser code editing and instant rescanning**
-- **Interactive attack path visualization**
-- **AI-driven vulnerability explanations**
-- **Team-based competition with real-time leaderboards**
-- **Educational resources and guided remediation**
+--Live Remediation Sandbox
+--Edit vulnerable code directly in-browser with Monaco Editor and instantly re-scan to verify fixes.
 
----
+--AI-Powered Explanations
+--Get plain-English vulnerability explanations and tailored fix suggestions from an integrated AI assistant.
 
-## Installation
+--Attack Path Visualization
+--Interactive graph shows how vulnerabilities can be chained together for real-world exploits.
 
-*(Replace with your actual installation instructions.)*
+--Team Collaboration
+--Assign vulnerabilities, comment in real time, and manage security tasks as a team.
 
-**Prerequisites:**  
-Node.js (latest LTS), Python 3.8+, and a modern web browser.
+--False Positive Management
+--Mark and track false positives for accurate reporting and continuous learning.
 
-**Steps to install:**
-1. Clone the repository:
-git clone https://github.com/yourusername/yourproject.git
+--Custom Payload Testing
+--Advanced users can supply their own attack payloads to test for edge-case vulnerabilities.
 
-2. Navigate to the project directory:
+--Scan History & Reporting
+--All scans and actions are securely stored for future reference and compliance.
 
-3. Install dependencies:
-npm install
-pip install -r requirements.txt
-
-
+--Export Reports as PDF
+--Download well-formatted PDF reports of your scan results for sharing or documentation.
 ---
 
 ## Live Demo
@@ -99,18 +96,6 @@ npm start
 3. **Upload or paste code, explore vulnerabilities, and use the live remediation sandbox.**
 4. **Compete with teammates in Team Warfare Mode for added fun!**
 
-
-## Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. **Fork** the repository.
-2. **Create your feature branch** (`git checkout -b feature/AmazingFeature`).
-3. **Commit your changes** (`git commit -m 'Add some AmazingFeature'`).
-4. **Push to the branch** (`git push origin feature/AmazingFeature`).
-5. **Open a Pull Request.**
-
----
 
 
 
