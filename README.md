@@ -46,7 +46,7 @@ This project redefines vulnerability scanning by combining advanced detection, i
 ### AI-Powered Context Analysis
 
 - **LLM-based vulnerability explanation**
-- **Implementation:** Hugging Face Transformers API
+- **Implementation:** Open router API
 
 ### Team Warfare Mode
 
