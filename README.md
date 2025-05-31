@@ -129,7 +129,7 @@ npm run dev
 ---
 
 
-Tip:
+--tip:
 Replace <your-repository-url> with the actual URL of your Vulnalyze repository.
 Check your terminal output after running npm run dev to see the exact local address where your app is running.
 
