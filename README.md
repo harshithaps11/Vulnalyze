@@ -59,31 +59,31 @@ This project redefines vulnerability scanning by combining advanced detection, i
 
 ## Features
 
-🔍 OWASP Top 10 Scanning
+🔍 OWASP Top 10 Scanning : 
 Detects the most critical web vulnerabilities using both static and dynamic analysis.
 
-🔧 Live Remediation Sandbox
+🔧 Live Remediation Sandbox : 
 Edit vulnerable code directly in-browser with Monaco Editor and instantly re-scan to verify fixes.
 
-🧠 AI-Powered Explanations
+🧠 AI-Powered Explanations : 
 Get plain-English vulnerability explanations and tailored fix suggestions from an integrated AI assistant.
 
-🕸️ Attack Path Visualization
+🕸️ Attack Path Visualization : 
 Interactive graph shows how vulnerabilities can be chained together for real-world exploits.
 
-👥 Team Collaboration
+👥 Team Collaboration : 
 Assign vulnerabilities, comment in real time, and manage security tasks as a team.
 
-✅ False Positive Management
+✅ False Positive Management : 
 Mark and track false positives for accurate reporting and continuous learning.
 
-⚙️ Custom Payload Testing
+⚙️ Custom Payload Testing : 
 Advanced users can supply their own attack payloads to test for edge-case vulnerabilities.
 
-📊 Scan History & Reporting
+📊 Scan History & Reporting : 
 All scans and actions are securely stored for future reference and compliance.
 
-📄 Export Reports as PDF
+📄 Export Reports as PDF : 
 Download well-formatted PDF reports of your scan results for sharing or documentation.
 
 ---
