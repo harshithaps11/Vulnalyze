@@ -1,3 +1,4 @@
+
 # Vulnalyze
 🛡️# Project Name
 
@@ -11,6 +12,7 @@
 - [Existing Solutions Gap](#existing-solutions-gap)
 - [Your Potential Novelty](#your-potential-novelty)
 - [Features](#features)
+- [Setup and Run](#setup-and-run)
 - [Usage](#usage)
 - [License](#license)
 
@@ -56,46 +58,82 @@ This project redefines vulnerability scanning by combining advanced detection, i
 ---
 
 ## Features
---OWASP Top 10 Scanning
---Detects the most critical web vulnerabilities using both static and dynamic analysis.
 
---Live Remediation Sandbox
---Edit vulnerable code directly in-browser with Monaco Editor and instantly re-scan to verify fixes.
+- **OWASP Top 10 Scanning**  
+  Detects the most critical web vulnerabilities using both static and dynamic analysis.
 
---AI-Powered Explanations
---Get plain-English vulnerability explanations and tailored fix suggestions from an integrated AI assistant.
+- **Live Remediation Sandbox**  
+  Edit vulnerable code directly in-browser with Monaco Editor and instantly re-scan to verify fixes.
 
---Attack Path Visualization
---Interactive graph shows how vulnerabilities can be chained together for real-world exploits.
+- **AI-Powered Explanations**  
+  Get plain-English vulnerability explanations and tailored fix suggestions from an integrated AI assistant.
 
---Team Collaboration
---Assign vulnerabilities, comment in real time, and manage security tasks as a team.
+- **Attack Path Visualization**  
+  Interactive graph shows how vulnerabilities can be chained together for real-world exploits.
 
---False Positive Management
---Mark and track false positives for accurate reporting and continuous learning.
+- **Team Collaboration**  
+  Assign vulnerabilities, comment in real time, and manage security tasks as a team.
 
---Custom Payload Testing
---Advanced users can supply their own attack payloads to test for edge-case vulnerabilities.
+- **False Positive Management**  
+  Mark and track false positives for accurate reporting and continuous learning.
 
---Scan History & Reporting
---All scans and actions are securely stored for future reference and compliance.
+- **Custom Payload Testing**  
+  Advanced users can supply their own attack payloads to test for edge-case vulnerabilities.
 
---Export Reports as PDF
---Download well-formatted PDF reports of your scan results for sharing or documentation.
+- **Scan History & Reporting**  
+  All scans and actions are securely stored for future reference and compliance.
+
+- **Export Reports as PDF**  
+  Download well-formatted PDF reports of your scan results for sharing or documentation.
+
 ---
 
-## Live Demo
+## Setup and Run
 
-[Click here to view the deployed project](https://vulnalyze.netlify.app)
+### Prerequisites
+
+- **Node.js** (LTS version recommended) – [Download here](https://nodejs.org/)
+
+### Installation
+
+1. **Clone the repository:**
+git clone <your-repository-url>
+cd vulnalyze
+
+2. **Install dependencies:**
+npm install
+
+
+
+### Running the Project
+
+- **Start the development server:**
+npm run dev
+
+
+- **Note:** The project may **not run on `localhost:3000`** by default.  
+  - For Next.js, it often runs on `localhost:3000` by default, but check your terminal output for the actual address.
+  - For Vite or other frameworks, the port may differ and will be displayed in your terminal after running `npm run dev`.
+
+---
+
 ## Usage
 
-1. **Start the development server:**
-npm start
+1. **Start the development server with:**
+npm run dev
+
+
 2. **Or access the live deployed version here:**  
 [https://vulnalyze.netlify.app](https://vulnalyze.netlify.app)
 3. **Upload or paste code, explore vulnerabilities, and use the live remediation sandbox.**
 4. **Compete with teammates in Team Warfare Mode for added fun!**
 
+---
+
+
+--tip:
+Replace <your-repository-url> with the actual URL of your Vulnalyze repository.
+Check your terminal output after running npm run dev to see the exact local address where your app is running.
 
 
 
