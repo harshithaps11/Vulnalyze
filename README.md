@@ -83,9 +83,6 @@ All scans and actions are securely stored for future reference and compliance.
 Export Reports as PDF
 Download well-formatted PDF reports of your scan results for sharing or documentation.
 
-Role-Based Access Control
-Secure user and organization management with different permission levels.
----
 
 ## Live Demo
 
