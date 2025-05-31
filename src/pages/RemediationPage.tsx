@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { RemediationSandbox } from '../components/RemediationSandbox';
-import { Users, History, Code, Share2, BookOpen, AlertTriangle, CheckCircle, Settings, Download, Upload, Moon, Sun, Shield, Lock, Key, Copy, Link, Clock, Brain, Network, TestTube, Users2, Bot, ArrowUp } from 'lucide-react';
+import { Users, History, Code, Share2, BookOpen, AlertTriangle, CheckCircle, Settings, Download, Upload, Moon, Sun, Shield, Lock, Key, Copy, Link, Clock, Brain, Network, TestTube, Users2, Bot, ArrowUp, Zap, TrendingUp } from 'lucide-react';
 import * as d3 from 'd3';
 import { AttackPathVisualization } from '../components/AttackPathVisualization';
 import { TeamCollaboration } from '../components/TeamCollaboration';
 import { Footer } from '../components/Footer';
+import { AIAssistant } from '../components/AIAssistant';
+import { CodeEditor } from '../components/CodeEditor';
+import { getCodeExplanation, getBestPractices, getPerformanceAnalysis } from '../services/aiService';
 
 // Import Vulnerability type from wasmService
 import { Vulnerability } from '../services/wasmService';
@@ -119,6 +122,13 @@ type DragSubject = d3.SimulationNodeDatum & {
   fy?: number | null;
 };
 
+interface Message {
+  id: string;
+  content: string;
+  type: 'user' | 'assistant';
+  timestamp: Date;
+}
+
 export const RemediationPage = () => {
   const [code, setCode] = useState(exampleCode);
   const [activeTab, setActiveTab] = useState('editor');
@@ -148,6 +158,13 @@ export const RemediationPage = () => {
   const aiExplainerRef = useRef<HTMLDivElement>(null);
   const testPayloadRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState<string>('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResults, setAnalysisResults] = useState<{
+    explanation?: string;
+    bestPractices?: any[];
+    performance?: any[];
+  }>({});
 
   useEffect(() => {
     // Load code history from localStorage
@@ -463,6 +480,57 @@ export const RemediationPage = () => {
     return () => observer.disconnect();
   }, []);
 
+  const handleQuickFix = (fixedCode: string) => {
+    // Update the code in the editor
+    setCode(fixedCode);
+    
+    // Add to history
+    const newHistory: CodeHistory = {
+      id: Date.now().toString(),
+      code: fixedCode,
+      timestamp: new Date().toISOString(),
+      vulnerabilities: [] // Add actual vulnerabilities here
+    };
+    setCodeHistory(prev => {
+      const updated = [newHistory, ...prev].slice(0, 10); // Keep last 10 changes
+      localStorage.setItem('codeHistory', JSON.stringify(updated));
+      return updated;
+    });
+
+    // Show success message
+    const successMessage: Message = {
+      id: Date.now().toString(),
+      content: 'Code has been updated with the security fix.',
+      type: 'assistant',
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, successMessage]);
+  };
+
+  const handleAnalyze = async () => {
+    if (!code.trim()) return;
+
+    setIsAnalyzing(true);
+    try {
+      const [explanation, bestPractices, performance] = await Promise.all([
+        getCodeExplanation(code),
+        getBestPractices(code),
+        getPerformanceAnalysis(code)
+      ]);
+
+      setAnalysisResults({
+        explanation,
+        bestPractices,
+        performance
+      });
+      setActiveTab('analysis');
+    } catch (error) {
+      console.error('Error analyzing code:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   return (
     <div className={`min-h-screen flex flex-col ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
       <div className="flex-grow">
@@ -580,15 +648,15 @@ export const RemediationPage = () => {
                       Editor
                     </button>
                     <button
-                      onClick={() => setActiveTab('diff')}
+                      onClick={() => setActiveTab('analysis')}
                       className={`px-6 py-3 text-sm font-medium flex items-center ${
-                        activeTab === 'diff'
+                        activeTab === 'analysis'
                           ? 'border-b-2 border-blue-500 text-blue-600'
                           : isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-700'
                       }`}
                     >
-                      <Share2 className="w-4 h-4 mr-2" />
-                      Changes
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Analysis
                     </button>
                   </nav>
                 </div>
@@ -784,6 +852,17 @@ export const RemediationPage = () => {
 
             {/* Sidebar */}
             <div className="col-span-4 space-y-6">
+              {/* AI Assistant */}
+              <div className={`rounded-xl shadow-lg overflow-hidden ${
+                isDarkMode ? 'bg-gray-800' : 'bg-white'
+              }`}>
+                <AIAssistant 
+                  isDarkMode={isDarkMode} 
+                  currentCode={code} 
+                  onQuickFix={handleQuickFix}
+                />
+              </div>
+
               {/* Team Collaboration */}
               <TeamCollaboration isDarkMode={isDarkMode} />
 
