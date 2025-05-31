@@ -13,7 +13,7 @@ interface Vulnerability {
   severity: string;
   location: string;
   evidence: string;
-  
+  is_false_positive:boolean;
   remediation_status?: string;
   remediation_notes?: string;
 }
