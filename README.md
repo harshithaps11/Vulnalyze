@@ -5,6 +5,8 @@
 **A Next-Generation OWASP-Inspired Scanner with Live Remediation, Attack Path Visualization, AI Analysis, and Team Warfare Mode**
 
 ---
+<img width="1860" height="922" alt="Screenshot 2025-09-09 131813" src="https://github.com/user-attachments/assets/b45f1e54-e606-4792-97fc-f27d12ab7432" />
+
 
 ## Table of Contents
 
