@@ -1,0 +1,14 @@
+[build]
+  command = "npm install && npm run build"
+  publish = "dist"
+  base = "."
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_FLAGS = "--legacy-peer-deps"
+  CI = "false"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
