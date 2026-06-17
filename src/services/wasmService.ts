@@ -1,11 +1,15 @@
-//import init, { scan_code } from '../../wasm/pkg';
+import init, { scan_code } from '../../wasm/pkg/vulnalyze_wasm';
 
 let wasmInitialized = false;
 
 export const initializeWasm = async () => {
   if (!wasmInitialized) {
-    await init();
-    wasmInitialized = true;
+    try {
+      await init();
+      wasmInitialized = true;
+    } catch (err) {
+      console.error("WASM initialization failed: ", err);
+    }
   }
 };
 

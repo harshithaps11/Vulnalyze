@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Editor, { Monaco } from '@monaco-editor/react';
 import { AlertTriangle, CheckCircle, Users, MessageSquare } from 'lucide-react';
-import { Vulnerability } from '../services/wasmService';
+import { Vulnerability, scanCodeForVulnerabilities, processWasmResults } from '../services/wasmService';
 
 interface Collaborator {
   id: string;
@@ -115,26 +115,11 @@ export const RemediationSandbox = ({ initialCode, onCodeChange, isDarkMode = tru
   const scanCode = async (codeToScan: string) => {
     setIsScanning(true);
     try {
-      // TODO: Implement actual code scanning
-      const mockVulnerabilities: Vulnerability[] = [
-        {
-          id: '1',
-          type: 'xss',
-          line: 3,
-          description: 'Potential XSS vulnerability: Using innerHTML with user input',
-          severity: 'high'
-        },
-        {
-          id: '2',
-          type: 'sql_injection',
-          line: 7,
-          description: 'Potential SQL injection: Unescaped user input in SQL query',
-          severity: 'medium'
-        }
-      ];
-      setVulnerabilities(mockVulnerabilities);
+      const wasmRawResults = await scanCodeForVulnerabilities(codeToScan);
+      const processedResults = processWasmResults(codeToScan, wasmRawResults);
+      setVulnerabilities(processedResults);
     } catch (error) {
-      console.error('Error scanning code:', error);
+      console.error('Error scanning code with WASM:', error);
     } finally {
       setIsScanning(false);
     }

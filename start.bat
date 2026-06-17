@@ -24,7 +24,7 @@ start /B py -m uvicorn app.main:app --reload
 timeout /t 5
 
 :: Start frontend
-cd /d "%~dp0frontend"
+cd /d "%~dp0"
 echo Installing frontend dependencies...
 call npm install
 

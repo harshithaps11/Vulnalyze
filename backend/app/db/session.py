@@ -4,13 +4,19 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
-engine = create_async_engine(
-    settings.SQLALCHEMY_DATABASE_URI,
-    pool_pre_ping=True,
-    pool_size=20,
-    max_overflow=10,
-    echo=False,
-)
+if settings.SQLALCHEMY_DATABASE_URI.startswith("sqlite"):
+    engine = create_async_engine(
+        settings.SQLALCHEMY_DATABASE_URI,
+        echo=False,
+    )
+else:
+    engine = create_async_engine(
+        settings.SQLALCHEMY_DATABASE_URI,
+        pool_pre_ping=True,
+        pool_size=20,
+        max_overflow=10,
+        echo=False,
+    )
 
 AsyncSessionLocal = sessionmaker(
     engine,
