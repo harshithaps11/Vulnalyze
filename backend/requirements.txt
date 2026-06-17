@@ -3,7 +3,6 @@ uvicorn==0.27.1
 sqlalchemy==2.0.27
 redis==5.0.1
 celery==5.3.6
-rabbitmq-server==3.12.12
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.9
