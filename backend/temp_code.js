@@ -1,0 +1,1 @@
+function evalInput(userInput) { eval(userInput); }

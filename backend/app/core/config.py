@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import Field, field_validator
 from typing import Optional
 from functools import lru_cache
 
@@ -41,11 +42,24 @@ class Settings(BaseSettings):
     RATE_LIMIT_PER_MINUTE: int = 100
     
     # CORS
-    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    BACKEND_CORS_ORIGINS: list[str] = Field(
+        default_factory=lambda: [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ]
+    )
     
     class Config:
         case_sensitive = True
         env_file = ".env"
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value):
+        if isinstance(value, str):
+            return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

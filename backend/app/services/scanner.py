@@ -289,7 +289,7 @@ async def run_scan_task_in_background(scan_uuid: str, code: str, url: str):
                 severity=res['severity'],
                 location=res['location'],
                 evidence=res['evidence'],
-                metadata=res['metadata']
+                vuln_metadata=res['metadata']
             )
             db.add(db_vuln)
             

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { cn } from '../../lib/utils';
 
 interface AvatarProps {
@@ -16,23 +16,49 @@ export function Avatar({
   className,
   status
 }: AvatarProps) {
+  const [hasError, setHasError] = useState(false);
   const sizeClasses = {
     sm: 'h-8 w-8',
     md: 'h-10 w-10',
     lg: 'h-12 w-12',
   };
 
+  useEffect(() => {
+    setHasError(false);
+  }, [src]);
+
+  const initials = alt
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+
   return (
     <div className="relative inline-block">
-      <img
-        src={src}
-        alt={alt}
-        className={cn(
-          'rounded-full object-cover',
-          sizeClasses[size],
-          className
-        )}
-      />
+      {hasError || !src ? (
+        <div
+          className={cn(
+            'flex items-center justify-center rounded-full bg-dark-700 text-xs font-semibold text-white',
+            sizeClasses[size],
+            className
+          )}
+          aria-label={alt}
+        >
+          {initials || '?'}
+        </div>
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          onError={() => setHasError(true)}
+          className={cn(
+            'rounded-full object-cover',
+            sizeClasses[size],
+            className
+          )}
+        />
+      )}
       {status && (
         <span
           className={cn(
