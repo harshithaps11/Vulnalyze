@@ -117,9 +117,9 @@ def setup_sqlite_database() -> bool:
         """)
         
         conn.commit()
-        print("✓ Database tables created")
-        print("✓ Default organization created")
-        print("✓ Admin user created")
+        print("Database tables created")
+        print("Default organization created")
+        print("Admin user created")
         
         cursor.close()
         conn.close()
