@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { Pause, StopCircle, Terminal } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Progress } from '../ui/Progress';
 import { Badge } from '../ui/Badge';
 import { generateScanLogs } from '../../data/mockData';
+import { apiClient } from '../../services/apiClient';
 
 interface ScanProgressPanelProps {
   scanId: string;
@@ -64,7 +64,7 @@ export function ScanProgressPanel({
       }
 
       try {
-        const response = await axios.get(`http://localhost:8000/api/v1/scans/${scanId}/status`);
+        const response = await apiClient.get(`/scans/${scanId}/status`);
         const { status } = response.data;
         
         if (status === 'pending') {
@@ -122,6 +122,12 @@ export function ScanProgressPanel({
   return (
     <Card>
       <div className="flex flex-col h-full">
+        {error && (
+          <div className="mb-4 rounded-md border border-severity-critical/20 bg-severity-critical/10 px-4 py-3 text-sm text-severity-critical">
+            {error}
+          </div>
+        )}
+
         <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-xl font-semibold text-white">{scanName}</h2>

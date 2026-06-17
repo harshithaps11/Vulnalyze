@@ -15,7 +15,7 @@ import os
 
 from app.core.config import get_settings
 from app.db.session import get_db
-from app.models.models import User, Scan, Vulnerability, ScanStatus
+from app.models.models import User, Scan, Vulnerability, ScanStatus, VulnerabilitySeverity
 from app.services.scanner import ScannerService, run_hybrid_scan, run_scan_task_in_background
 
 settings = get_settings()
@@ -54,6 +54,24 @@ class ScanCreate(BaseModel):
     source_code: Optional[str] = None
     scan_type: str
 
+class VulnerabilityResponse(BaseModel):
+    id: int
+    scan_id: int
+    title: str
+    description: str
+    severity: VulnerabilitySeverity
+    location: str
+    evidence: Optional[str] = None
+    is_false_positive: bool
+    false_positive_reason: Optional[str] = None
+    remediation: Optional[str] = None
+    vuln_metadata: Optional[dict] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
 class ScanResponse(BaseModel):
     id: int
     uuid: UUID
@@ -61,7 +79,10 @@ class ScanResponse(BaseModel):
     target_url: str
     scan_type: str
     created_at: datetime
-    vulnerabilities: List[dict]
+    vulnerabilities: List[VulnerabilityResponse]
+
+    class Config:
+        from_attributes = True
 
 # Authentication
 def verify_password(plain_password: str, hashed_password: str) -> bool:

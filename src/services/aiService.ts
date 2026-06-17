@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8000/api';
+import { aiClient } from './apiClient';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -70,7 +68,7 @@ What specific aspect would you like me to focus on?`
 
 export const analyzeCodeWithAI = async (code: string, question: string): Promise<string> => {
   try {
-    const response = await axios.post<ApiResponse>(`${API_BASE_URL}/analyze`, {
+    const response = await aiClient.post<ApiResponse>('/analyze', {
       code,
       question
     });
@@ -84,7 +82,7 @@ export const analyzeCodeWithAI = async (code: string, question: string): Promise
 
 export const getCodeFix = async (code: string, vulnerability: string): Promise<string> => {
   try {
-    const response = await axios.post<ApiResponse>(`${API_BASE_URL}/fix`, {
+    const response = await aiClient.post<ApiResponse>('/fix', {
       code,
       vulnerability
     });
@@ -98,7 +96,7 @@ export const getCodeFix = async (code: string, vulnerability: string): Promise<s
 
 export const getCodeExplanation = async (code: string): Promise<string> => {
   try {
-    const response = await axios.post<ApiResponse>(`${API_BASE_URL}/explain`, {
+    const response = await aiClient.post<ApiResponse>('/explain', {
       code
     });
 
@@ -111,7 +109,7 @@ export const getCodeExplanation = async (code: string): Promise<string> => {
 
 export const getBestPractices = async (code: string): Promise<Suggestion[]> => {
   try {
-    const response = await axios.post<ApiResponse>(`${API_BASE_URL}/best-practices`, {
+    const response = await aiClient.post<ApiResponse>('/best-practices', {
       code
     });
 
@@ -124,7 +122,7 @@ export const getBestPractices = async (code: string): Promise<Suggestion[]> => {
 
 export const getPerformanceAnalysis = async (code: string): Promise<PerformanceMetric[]> => {
   try {
-    const response = await axios.post<ApiResponse>(`${API_BASE_URL}/performance`, {
+    const response = await aiClient.post<ApiResponse>('/performance', {
       code
     });
 

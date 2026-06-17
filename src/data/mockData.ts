@@ -1,13 +1,24 @@
 import { Scan, Vulnerability, User, Comment, TeamActivity } from '../types';
 import { getRandomInt } from '../lib/utils';
 
+const createAvatarPlaceholder = (initials: string, background: string): string => {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150">
+      <rect width="150" height="150" rx="75" fill="${background}" />
+      <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="54" font-weight="700" fill="#ffffff">${initials}</text>
+    </svg>
+  `;
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg.trim())}`;
+};
+
 // Mock Users
 export const mockUsers: User[] = [
   {
     id: '1',
     name: 'Alex Morgan',
     email: 'alex@example.com',
-    avatar: 'https://i.pravatar.cc/150?img=1',
+    avatar: createAvatarPlaceholder('AM', '#2563eb'),
     role: 'admin',
     isOnline: true,
   },
@@ -15,7 +26,7 @@ export const mockUsers: User[] = [
     id: '2',
     name: 'Jordan Lee',
     email: 'jordan@example.com',
-    avatar: 'https://i.pravatar.cc/150?img=2',
+    avatar: createAvatarPlaceholder('JL', '#059669'),
     role: 'member',
     isOnline: true,
   },
@@ -23,7 +34,7 @@ export const mockUsers: User[] = [
     id: '3',
     name: 'Taylor Kim',
     email: 'taylor@example.com',
-    avatar: 'https://i.pravatar.cc/150?img=3',
+    avatar: createAvatarPlaceholder('TK', '#7c3aed'),
     role: 'member',
     isOnline: false,
   },
@@ -31,7 +42,7 @@ export const mockUsers: User[] = [
     id: '4',
     name: 'Jamie Smith',
     email: 'jamie@example.com',
-    avatar: 'https://i.pravatar.cc/150?img=4',
+    avatar: createAvatarPlaceholder('JS', '#ea580c'),
     role: 'member',
     isOnline: true,
   },

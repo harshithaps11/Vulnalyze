@@ -8,15 +8,18 @@ import { ScanResults } from './pages/ScanResults';
 import { Team } from './pages/Team';
 import { NotFound } from './pages/NotFound';
 import { RemediationPage } from './pages/RemediationPage';
+import { Profile } from './pages/Profile';
+import { Settings } from './pages/Settings';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="min-h-screen bg-dark-900 flex flex-col">
         <Header />
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/scan" element={<ScanConfiguration />} />
             <Route path="/scan/progress/:scanId" element={<ScanProgress />} />
             <Route path="/results" element={<ScanResults />} />
@@ -24,7 +27,7 @@ function App() {
             <Route path="/team" element={<Team />} />
             <Route path="/remediation" element={<RemediationPage />} />
             <Route path="/reports" element={<Navigate to="/results" replace />} />
-            <Route path="/settings" element={<NotFound />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

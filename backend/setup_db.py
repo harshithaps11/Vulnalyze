@@ -1,12 +1,10 @@
 import os
 import sys
 import sqlite3
-import subprocess
 from pathlib import Path
-from typing import Optional, Tuple
 
 def setup_sqlite_database() -> bool:
-    """Set up SQLite database and initial data."""
+    """Set up SQLite database and initial data matching SQLAlchemy models exactly."""
     print("\nSetting up SQLite database...")
     
     # Create database directory if it doesn't exist
@@ -16,69 +14,69 @@ def setup_sqlite_database() -> bool:
     # Create database file
     db_path = db_dir / "vulnalyze.db"
     
+    # If old database exists, let's delete it to start fresh with correct schema
+    if db_path.exists():
+        try:
+            db_path.unlink()
+        except Exception as e:
+            print(f"Warning: Could not remove old DB file: {e}")
+            
     try:
         # Connect to SQLite database
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
         
-        # Create tables
-        print("Creating database tables...")
+        print("Creating database tables with SQLAlchemy compatible schemas...")
         
-        # Users table
+        # 1. Organization table
         cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
+        CREATE TABLE IF NOT EXISTS organization (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+        
+        # 2. User table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
             hashed_password TEXT NOT NULL,
             full_name TEXT,
+            role TEXT DEFAULT 'user',
             is_active BOOLEAN DEFAULT TRUE,
-            is_superuser BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            organization_id INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (organization_id) REFERENCES organization (id)
         )
         """)
         
-        # Organizations table
+        # 3. Scan table
         cursor.execute("""
-        CREATE TABLE IF NOT EXISTS organizations (
+        CREATE TABLE IF NOT EXISTS scan (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            description TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """)
-        
-        # User-Organization relationship
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS user_organizations (
+            uuid TEXT UNIQUE NOT NULL,
+            status TEXT DEFAULT 'pending',
+            target_url TEXT NOT NULL,
+            source_code TEXT,
+            scan_type TEXT NOT NULL,
+            results TEXT,
             user_id INTEGER,
             organization_id INTEGER,
-            role TEXT NOT NULL,
-            FOREIGN KEY (user_id) REFERENCES users (id),
-            FOREIGN KEY (organization_id) REFERENCES organizations (id),
-            PRIMARY KEY (user_id, organization_id)
-        )
-        """)
-        
-        # Scans table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS scans (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            target_url TEXT NOT NULL,
-            scan_type TEXT NOT NULL,
-            status TEXT NOT NULL,
-            organization_id INTEGER,
-            created_by INTEGER,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            completed_at TIMESTAMP,
-            FOREIGN KEY (organization_id) REFERENCES organizations (id),
-            FOREIGN KEY (created_by) REFERENCES users (id)
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES user (id),
+            FOREIGN KEY (organization_id) REFERENCES organization (id)
         )
         """)
         
-        # Vulnerabilities table
+        # 4. Vulnerability table
         cursor.execute("""
-        CREATE TABLE IF NOT EXISTS vulnerabilities (
+        CREATE TABLE IF NOT EXISTS vulnerability (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             scan_id INTEGER,
             title TEXT NOT NULL,
@@ -87,33 +85,27 @@ def setup_sqlite_database() -> bool:
             location TEXT,
             evidence TEXT,
             is_false_positive BOOLEAN DEFAULT FALSE,
-            remediation_code TEXT,
-            remediation_status TEXT DEFAULT 'pending',
-            remediation_notes TEXT,
+            false_positive_reason TEXT,
+            remediation TEXT,
+            vuln_metadata TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (scan_id) REFERENCES scans (id)
+            FOREIGN KEY (scan_id) REFERENCES scan (id)
         )
         """)
         
-        # Create default organization
+        # Insert Default Organization
         cursor.execute("""
-        INSERT OR IGNORE INTO organizations (id, name, description)
+        INSERT OR IGNORE INTO organization (id, name, description)
         VALUES (1, 'Default Organization', 'Default organization for all users')
         """)
         
-        # Create admin user (password: admin123)
+        # Insert Admin User (password: admin123)
         cursor.execute("""
-        INSERT OR IGNORE INTO users (id, email, hashed_password, full_name, is_superuser)
+        INSERT OR IGNORE INTO user (id, email, hashed_password, full_name, role, is_active, organization_id)
         VALUES (1, 'admin@vulnalyze.com', 
         '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
-        'Admin User', TRUE)
-        """)
-        
-        # Link admin to default organization
-        cursor.execute("""
-        INSERT OR IGNORE INTO user_organizations (user_id, organization_id, role)
-        VALUES (1, 1, 'admin')
+        'Admin User', 'ADMIN', TRUE, 1)
         """)
         
         conn.commit()
@@ -156,4 +148,4 @@ def main():
     print_success_message()
 
 if __name__ == "__main__":
-    main() 
+    main()

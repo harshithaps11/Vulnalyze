@@ -3,6 +3,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { ScanConfigurationForm } from '../components/scan/ScanConfigurationForm';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { apiClient } from '../services/apiClient';
 
 export function ScanConfiguration() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export function ScanConfiguration() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post('http://localhost:8000/api/v1/scans', {
+      const response = await apiClient.post('/scans', {
         target_url: config.url,
         source_code: config.type === 'static' || config.type === 'hybrid' ? `// Scan target: ${config.url}\n\nfunction evalInput(userInput) {\n  eval("console.log(" + userInput + ")"); // command injection\n}\n\nfunction updateHtml(userInput) {\n  document.getElementById("content").innerHTML = userInput; // xss\n}\n\nfunction selectUser(userId) {\n  const query = "SELECT * FROM users WHERE id = '" + userId + "'"; // sql injection\n  return query;\n}` : null,
         scan_type: config.type
@@ -23,7 +24,20 @@ export function ScanConfiguration() {
       navigate(`/scan/progress/${scanUuid}`);
     } catch (err: any) {
       console.error('Error starting scan:', err);
-      setError(err.response?.data?.detail || 'Failed to start scan. Please check if the backend server is running.');
+      if (axios.isAxiosError(err)) {
+        const detail = err.response?.data?.detail;
+        if (typeof detail === 'string' && detail.trim()) {
+          setError(detail);
+        } else if (err.code === 'ERR_NETWORK') {
+          setError('Unable to reach the backend at http://localhost:8000. Make sure the API server is running.');
+        } else if (err.response?.status === 422) {
+          setError('The scan request was rejected because the input data is invalid.');
+        } else {
+          setError('Failed to start scan. Please check the backend response and try again.');
+        }
+      } else {
+        setError('Failed to start scan. Please check the backend response and try again.');
+      }
     } finally {
       setLoading(false);
     }
