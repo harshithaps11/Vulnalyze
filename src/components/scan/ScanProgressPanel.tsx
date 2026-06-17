@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { Pause, StopCircle, Terminal } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -31,35 +33,84 @@ export function ScanProgressPanel({
   
   const logContainerRef = React.useRef<HTMLDivElement>(null);
   
-  // Simulate scan progress
+  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+
+  // Poll scan status from backend
   useEffect(() => {
-    if (progress >= 100) return;
+    let intervalId: NodeJS.Timeout;
+    let localProgress = 0;
     
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        const increment = Math.random() * 2;
-        return prev + increment > 100 ? 100 : prev + increment;
-      });
-      
-      // Add new logs occasionally
-      if (Math.random() > 0.7) {
-        setLogs(prev => [...prev, ...generateScanLogs(1)]);
-        
-        // Occasionally add a vulnerability
-        if (Math.random() > 0.8) {
-          const severities = ['critical', 'high', 'medium', 'low', 'info'] as const;
-          const randomSeverity = severities[Math.floor(Math.random() * severities.length)];
-          
-          setVulnerabilities(prev => ({
-            ...prev,
-            [randomSeverity]: prev[randomSeverity] + 1
-          }));
+    // Add initial logs
+    setLogs([
+      "Initializing scan configuration...",
+      `Target URL: ${scanId !== 'new-scan' ? 'Loading...' : 'Local sandbox'}`,
+      "Contacting scanner backend..."
+    ]);
+
+    const pollStatus = async () => {
+      if (scanId === 'new-scan') {
+        localProgress += 10;
+        if (localProgress >= 100) {
+          localProgress = 100;
+          setLogs(prev => [...prev, "Scan finished successfully.", "Generated vulnerability report."]);
+          setProgress(100);
+          setTimeout(() => navigate('/results'), 1500);
+          return;
         }
+        setProgress(localProgress);
+        setLogs(prev => [...prev, ...generateScanLogs(1)]);
+        return;
       }
-    }, 500);
-    
-    return () => clearInterval(interval);
-  }, [progress]);
+
+      try {
+        const response = await axios.get(`http://localhost:8000/api/v1/scans/${scanId}/status`);
+        const { status } = response.data;
+        
+        if (status === 'pending') {
+          setLogs(prev => {
+            if (prev.includes("Scan status: PENDING")) return prev;
+            return [...prev, "Scan status: PENDING", "Waiting for scanner task dispatch..."];
+          });
+          setProgress(5);
+        } else if (status === 'running') {
+          setProgress(prev => {
+            const nextProgress = prev + (90 - prev) * 0.1;
+            return nextProgress;
+          });
+          setLogs(prev => {
+            const newLogs = [...prev];
+            if (!newLogs.includes("Scan status: RUNNING")) {
+              newLogs.push("Scan status: RUNNING", "Running static analysis (Semgrep / AST Scanner)...");
+            }
+            if (Math.random() > 0.6) {
+              newLogs.push(...generateScanLogs(1));
+            }
+            return newLogs;
+          });
+        } else if (status === 'completed') {
+          setProgress(100);
+          setLogs(prev => [...prev, "Scan status: COMPLETED", "Writing scan findings to database...", "Redirecting to scan results..."]);
+          clearInterval(intervalId);
+          setTimeout(() => {
+            navigate(`/results/${scanId}`);
+          }, 1500);
+        } else if (status === 'failed') {
+          setProgress(100);
+          setLogs(prev => [...prev, "Scan status: FAILED", "Scanner task encountered an execution error."]);
+          clearInterval(intervalId);
+        }
+      } catch (err) {
+        console.error("Error polling scan status:", err);
+        setError("Unable to connect to scanning service.");
+      }
+    };
+
+    pollStatus();
+    intervalId = setInterval(pollStatus, 2000);
+
+    return () => clearInterval(intervalId);
+  }, [scanId, navigate]);
   
   // Auto-scroll logs to bottom
   useEffect(() => {

@@ -3,8 +3,11 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { VulnerabilityTable } from '../components/results/VulnerabilityTable';
 import { Button } from '../components/ui/Button';
 import { Download, FileText, RefreshCw } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 
 export function ScanResults() {
+  const { scanId } = useParams();
+
   return (
     <PageContainer
       title="Scan Results"
@@ -36,7 +39,7 @@ export function ScanResults() {
       }
     >
       <div className="space-y-6">
-        <VulnerabilityTable />
+        <VulnerabilityTable scanId={scanId} />
       </div>
     </PageContainer>
   );

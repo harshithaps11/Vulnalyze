@@ -20,6 +20,7 @@ function App() {
             <Route path="/scan" element={<ScanConfiguration />} />
             <Route path="/scan/progress/:scanId" element={<ScanProgress />} />
             <Route path="/results" element={<ScanResults />} />
+            <Route path="/results/:scanId" element={<ScanResults />} />
             <Route path="/team" element={<Team />} />
             <Route path="/remediation" element={<RemediationPage />} />
             <Route path="/reports" element={<Navigate to="/results" replace />} />

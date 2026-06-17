@@ -53,7 +53,7 @@ class Scan(Base):
     
     user: Mapped["User"] = relationship(back_populates="scans")
     organization: Mapped["Organization"] = relationship(back_populates="scans")
-    vulnerabilities: Mapped[List["Vulnerability"]] = relationship(back_populates="scan")
+    vulnerabilities: Mapped[List["Vulnerability"]] = relationship(back_populates="scan", lazy="selectin")
 
 class Vulnerability(Base):
     scan_id: Mapped[int] = mapped_column(ForeignKey("scan.id"))
