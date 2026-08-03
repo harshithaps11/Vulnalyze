@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { RemediationSandbox } from '../components/RemediationSandbox';
 import { Users, History, Code, Share2, BookOpen, AlertTriangle, CheckCircle, Settings, Download, Upload, Moon, Sun, Shield, Lock, Key, Copy, Link, Clock, Brain, Network, TestTube, Users2, Bot, ArrowUp, Zap, TrendingUp } from 'lucide-react';
 import * as d3 from 'd3';
@@ -130,7 +131,20 @@ interface Message {
 }
 
 export const RemediationPage = () => {
+  const location = useLocation();
   const [code, setCode] = useState(exampleCode);
+  const [targetLine, setTargetLine] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    if (location.state) {
+      if (location.state.code) {
+        setCode(location.state.code);
+      }
+      if (location.state.line) {
+        setTargetLine(location.state.line);
+      }
+    }
+  }, [location.state]);
   const [activeTab, setActiveTab] = useState('editor');
   const [selectedSnippet, setSelectedSnippet] = useState<typeof codeSnippets[0] | null>(null);
   const [showCollaborators, setShowCollaborators] = useState(false);
@@ -155,6 +169,7 @@ export const RemediationPage = () => {
   const [customPayload, setCustomPayload] = useState('');
   const [testResults, setTestResults] = useState<any>(null);
   const [isTesting, setIsTesting] = useState(false);
+  const [remediationVulnerabilities, setRemediationVulnerabilities] = useState<Vulnerability[]>([]);
   const aiExplainerRef = useRef<HTMLDivElement>(null);
   const testPayloadRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState<string>('');
@@ -667,6 +682,8 @@ export const RemediationPage = () => {
                       initialCode={code}
                       onCodeChange={handleCodeChange}
                       isDarkMode={isDarkMode}
+                      targetLine={targetLine}
+                      onVulnerabilitiesChange={setRemediationVulnerabilities}
                     />
                   ) : (
                     <div className={`h-[500px] flex items-center justify-center ${
@@ -680,7 +697,7 @@ export const RemediationPage = () => {
 
               {/* Attack Path Visualization */}
               <div className="mt-6">
-                <AttackPathVisualization isDarkMode={isDarkMode} />
+                <AttackPathVisualization isDarkMode={isDarkMode} vulnerabilities={remediationVulnerabilities} />
               </div>
 
               {/* AI Explainer Section */}

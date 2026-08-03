@@ -1,1 +1,1 @@
-function evalInput(userInput) { eval(userInput); }
+function test() { document.getElementById("x").innerHTML = userInput; const q = "SELECT * FROM users WHERE id = " + id; eval(userInput); return md5(password); }

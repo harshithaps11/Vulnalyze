@@ -191,6 +191,21 @@ async def create_scan(
     
     return db_scan
 
+@app.get(f"{settings.API_V1_STR}/scans", response_model=List[ScanResponse])
+async def list_scans(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(Scan)
+        .options(selectinload(Scan.vulnerabilities))
+        .where(Scan.organization_id == current_user.organization_id)
+        .order_by(Scan.created_at.desc())
+        .limit(20)
+    )
+    scans = result.scalars().all()
+    return scans
+
 @app.get(f"{settings.API_V1_STR}/scans/{{scan_id}}", response_model=ScanResponse)
 async def get_scan(
     scan_id: UUID,

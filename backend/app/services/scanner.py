@@ -4,29 +4,34 @@ import os
 from typing import List, Dict, Any
 from app.core.config import get_settings
 from app.models.models import Vulnerability, VulnerabilitySeverity
-import redis.asyncio as redis
-from celery import Celery
 
 settings = get_settings()
 
 # Initialize Redis client optionally
 redis_client = None
-if settings.REDIS_HOST:
-    try:
+try:
+    import redis.asyncio as redis
+    if settings.REDIS_HOST:
         redis_client = redis.Redis(
             host=settings.REDIS_HOST,
             port=settings.REDIS_PORT,
             password=settings.REDIS_PASSWORD,
             decode_responses=True
         )
-    except Exception as e:
-        print(f"Redis connection warning: {str(e)}")
+except Exception as e:
+    print(f"Redis not available (optional): {str(e)}")
 
-# Initialize Celery
-celery_app = Celery(
-    'vulnalyze',
-    broker=f'amqp://{settings.RABBITMQ_USER}:{settings.RABBITMQ_PASSWORD}@{settings.RABBITMQ_HOST}:{settings.RABBITMQ_PORT}//' if settings.RABBITMQ_HOST else 'memory://'
-)
+# Initialize Celery optionally (requires RabbitMQ)
+celery_app = None
+try:
+    from celery import Celery
+    if settings.RABBITMQ_HOST:
+        celery_app = Celery(
+            'vulnalyze',
+            broker=f'amqp://{settings.RABBITMQ_USER}:{settings.RABBITMQ_PASSWORD}@{settings.RABBITMQ_HOST}:{settings.RABBITMQ_PORT}//'
+        )
+except Exception as e:
+    print(f"Celery/RabbitMQ not available (optional): {str(e)}")
 
 class ScannerService:
     def __init__(self):
@@ -221,9 +226,9 @@ class ScannerService:
         except Exception as e:
             print(f"Redis set error: {str(e)}")
 
-@celery_app.task
+
 def run_hybrid_scan(scan_id: str, code: str, url: str):
-    """Celery task to run hybrid scan."""
+    """Run hybrid scan (registered as Celery task when available)."""
     scanner = ScannerService()
     
     # Run scans concurrently
@@ -237,6 +242,10 @@ def run_hybrid_scan(scan_id: str, code: str, url: str):
     asyncio.run(scanner.cache_results(f"scan:{scan_id}", all_results))
     
     return all_results
+
+# Register as Celery task when Celery is available
+if celery_app is not None:
+    run_hybrid_scan = celery_app.task(run_hybrid_scan)
 
 async def run_scan_task_in_background(scan_uuid: str, code: str, url: str):
     """Async background task to run the hybrid scan and save results to SQLite/Postgres DB."""

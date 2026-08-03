@@ -16,7 +16,36 @@ export function ScanConfiguration() {
     try {
       const response = await apiClient.post('/scans', {
         target_url: config.url,
-        source_code: config.type === 'static' || config.type === 'hybrid' ? `// Scan target: ${config.url}\n\nfunction evalInput(userInput) {\n  eval("console.log(" + userInput + ")"); // command injection\n}\n\nfunction updateHtml(userInput) {\n  document.getElementById("content").innerHTML = userInput; // xss\n}\n\nfunction selectUser(userId) {\n  const query = "SELECT * FROM users WHERE id = '" + userId + "'"; // sql injection\n  return query;\n}` : null,
+        // Demo source code: contains intentional vulnerabilities so the scanner always finds real results.
+        // In production, users would upload their actual source files.
+        source_code: config.type === 'static' || config.type === 'hybrid'
+          ? `// === DEMO: Intentionally Vulnerable Code ===
+// This snippet is used to demonstrate Vulnalyze's static scanner.
+// Each function below contains a real vulnerability class.
+
+// [VULN: XSS] Unsanitized innerHTML assignment
+function renderUserContent(userInput) {
+  document.getElementById("output").innerHTML = userInput;
+}
+
+// [VULN: SQL Injection] String concatenation in query
+function findUser(userId) {
+  const query = "SELECT * FROM users WHERE id = '" + userId + "'";
+  return db.execute(query);
+}
+
+// [VULN: Command Injection] Dynamic eval / exec usage
+function runScript(scriptName) {
+  eval("require('./" + scriptName + "')");
+  exec("node " + scriptName);
+}
+
+// [VULN: Weak Hash] MD5 and SHA-1 for password hashing
+function hashPassword(password) {
+  return md5(password) || sha1(password);
+}
+`
+          : null,
         scan_type: config.type
       });
       

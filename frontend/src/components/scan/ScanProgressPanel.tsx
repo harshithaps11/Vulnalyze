@@ -5,7 +5,6 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Progress } from '../ui/Progress';
 import { Badge } from '../ui/Badge';
-import { generateScanLogs } from '../../data/mockData';
 import { apiClient } from '../../services/apiClient';
 
 interface ScanProgressPanelProps {
@@ -14,6 +13,25 @@ interface ScanProgressPanelProps {
   onStop?: () => void;
   onPause?: () => void;
 }
+
+// Deterministic log messages per phase — no Math.random()
+const PENDING_LOGS = [
+  "Initializing scan configuration...",
+  "Authenticating with scanner backend...",
+  "Queuing scan task...",
+  "Waiting for scanner worker dispatch...",
+];
+
+const RUNNING_LOGS = [
+  "Running static analysis (AST / Regex scanner)...",
+  "Scanning for XSS vulnerabilities (innerHTML, eval)...",
+  "Checking for SQL injection patterns...",
+  "Checking for command injection patterns...",
+  "Checking for weak cryptographic hash usage...",
+  "Running dynamic analysis checks...",
+  "Aggregating scan results...",
+  "Writing findings to database...",
+];
 
 export function ScanProgressPanel({ 
   scanId, 
@@ -30,79 +48,97 @@ export function ScanProgressPanel({
     low: 0,
     info: 0
   });
+  const [scanStatus, setScanStatus] = useState<string>('pending');
   
   const logContainerRef = React.useRef<HTMLDivElement>(null);
-  
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
   // Poll scan status from backend
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-    let localProgress = 0;
-    
-    // Add initial logs
-    setLogs([
-      "Initializing scan configuration...",
-      `Target URL: ${scanId !== 'new-scan' ? 'Loading...' : 'Local sandbox'}`,
-      "Contacting scanner backend..."
-    ]);
+    let intervalId: ReturnType<typeof setInterval>;
+    let pendingLogIndex = 0;
+    let runningLogIndex = 0;
+
+    // Add initial log
+    setLogs(["Connecting to Vulnalyze scanner backend..."]);
 
     const pollStatus = async () => {
       if (scanId === 'new-scan') {
-        localProgress += 10;
-        if (localProgress >= 100) {
-          localProgress = 100;
-          setLogs(prev => [...prev, "Scan finished successfully.", "Generated vulnerability report."]);
-          setProgress(100);
-          setTimeout(() => navigate('/results'), 1500);
-          return;
-        }
-        setProgress(localProgress);
-        setLogs(prev => [...prev, ...generateScanLogs(1)]);
+        // No real scan — just navigate to results
+        setProgress(100);
+        setTimeout(() => navigate('/results'), 1500);
         return;
       }
 
       try {
         const response = await apiClient.get(`/scans/${scanId}/status`);
         const { status } = response.data;
-        
+        setScanStatus(status);
+
         if (status === 'pending') {
-          setLogs(prev => {
-            if (prev.includes("Scan status: PENDING")) return prev;
-            return [...prev, "Scan status: PENDING", "Waiting for scanner task dispatch..."];
-          });
           setProgress(5);
+          if (pendingLogIndex < PENDING_LOGS.length) {
+            setLogs(prev => {
+              const next = PENDING_LOGS[pendingLogIndex];
+              if (prev.includes(next)) return prev;
+              return [...prev, next];
+            });
+            pendingLogIndex++;
+          }
         } else if (status === 'running') {
+          // Progress moves from 10% toward 90% smoothly
           setProgress(prev => {
-            const nextProgress = prev + (90 - prev) * 0.1;
-            return nextProgress;
+            const next = prev + (90 - prev) * 0.15;
+            return Math.min(next, 88);
           });
-          setLogs(prev => {
-            const newLogs = [...prev];
-            if (!newLogs.includes("Scan status: RUNNING")) {
-              newLogs.push("Scan status: RUNNING", "Running static analysis (Semgrep / AST Scanner)...");
-            }
-            if (Math.random() > 0.6) {
-              newLogs.push(...generateScanLogs(1));
-            }
-            return newLogs;
-          });
+          if (runningLogIndex < RUNNING_LOGS.length) {
+            setLogs(prev => {
+              const next = RUNNING_LOGS[runningLogIndex];
+              if (prev.includes(next)) return prev;
+              return [...prev, next];
+            });
+            runningLogIndex++;
+          }
         } else if (status === 'completed') {
           setProgress(100);
-          setLogs(prev => [...prev, "Scan status: COMPLETED", "Writing scan findings to database...", "Redirecting to scan results..."]);
           clearInterval(intervalId);
-          setTimeout(() => {
-            navigate(`/results/${scanId}`);
-          }, 1500);
+
+          // Fetch full scan to get real vulnerability counts
+          try {
+            const scanResponse = await apiClient.get(`/scans/${scanId}`);
+            const vulns: any[] = scanResponse.data?.vulnerabilities || [];
+            const counts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+            vulns.forEach((v: any) => {
+              const sev = v.severity?.toLowerCase();
+              if (sev === 'critical') counts.critical++;
+              else if (sev === 'high') counts.high++;
+              else if (sev === 'medium') counts.medium++;
+              else if (sev === 'low') counts.low++;
+              else counts.info++;
+            });
+            setVulnerabilities(counts);
+            const total = vulns.length;
+            setLogs(prev => [
+              ...prev,
+              `Scan COMPLETED — ${total} vulnerabilit${total === 1 ? 'y' : 'ies'} found.`,
+              "Redirecting to scan results..."
+            ]);
+          } catch {
+            setLogs(prev => [...prev, "Scan COMPLETED. Redirecting to results..."]);
+          }
+
+          setTimeout(() => navigate(`/results/${scanId}`), 1800);
         } else if (status === 'failed') {
           setProgress(100);
-          setLogs(prev => [...prev, "Scan status: FAILED", "Scanner task encountered an execution error."]);
           clearInterval(intervalId);
+          setLogs(prev => [...prev, "ERROR: Scan task encountered an error. Check backend logs."]);
+          setScanStatus('failed');
         }
       } catch (err) {
         console.error("Error polling scan status:", err);
-        setError("Unable to connect to scanning service.");
+        setError("Unable to connect to the scanning backend at http://localhost:8000. Make sure it is running.");
+        clearInterval(intervalId);
       }
     };
 
@@ -119,6 +155,13 @@ export function ScanProgressPanel({
     }
   }, [logs]);
 
+  const statusColors: Record<string, string> = {
+    pending: 'text-severity-medium',
+    running: 'text-primary-400',
+    completed: 'text-severity-low',
+    failed: 'text-severity-critical',
+  };
+
   return (
     <Card>
       <div className="flex flex-col h-full">
@@ -131,7 +174,13 @@ export function ScanProgressPanel({
         <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-xl font-semibold text-white">{scanName}</h2>
-            <p className="text-sm text-dark-400">Scan ID: {scanId}</p>
+            <p className="text-sm text-dark-400">
+              Scan ID: <span className="font-mono text-xs">{scanId}</span>
+              {' · '}
+              <span className={`font-medium uppercase text-xs ${statusColors[scanStatus] || 'text-dark-400'}`}>
+                {scanStatus}
+              </span>
+            </p>
           </div>
           
           <div className="flex gap-2">
@@ -194,13 +243,15 @@ export function ScanProgressPanel({
             {logs.map((log, index) => (
               <div key={index} className="mb-1">
                 <span className={`
-                  ${log.includes('Critical') ? 'text-severity-critical' : ''}
-                  ${log.includes('High') ? 'text-severity-high' : ''}
-                  ${log.includes('Medium') ? 'text-severity-medium' : ''}
-                  ${log.includes('Low') ? 'text-severity-low' : ''}
-                  ${log.includes('Info') ? 'text-severity-info' : ''}
-                  ${!log.includes('Critical') && !log.includes('High') && !log.includes('Medium') && 
-                    !log.includes('Low') && !log.includes('Info') ? 'text-dark-300' : ''}
+                  ${log.includes('COMPLETED') || log.includes('completed') ? 'text-severity-low' : ''}
+                  ${log.includes('ERROR') || log.includes('failed') ? 'text-severity-critical' : ''}
+                  ${log.includes('RUNNING') || log.includes('running') || log.includes('Running') ? 'text-primary-400' : ''}
+                  ${log.includes('PENDING') || log.includes('Waiting') || log.includes('Queuing') ? 'text-severity-medium' : ''}
+                  ${!log.includes('COMPLETED') && !log.includes('completed') 
+                    && !log.includes('ERROR') && !log.includes('failed')
+                    && !log.includes('RUNNING') && !log.includes('running') && !log.includes('Running')
+                    && !log.includes('PENDING') && !log.includes('Waiting') && !log.includes('Queuing')
+                    ? 'text-dark-300' : ''}
                 `}>
                   {log}
                 </span>

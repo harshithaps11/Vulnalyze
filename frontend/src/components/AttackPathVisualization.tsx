@@ -3,16 +3,21 @@ import * as d3 from 'd3';
 
 interface AttackPathVisualizationProps {
   isDarkMode: boolean;
+  vulnerabilities?: Array<{
+    type: string;
+    severity?: string;
+    description?: string;
+  }>;
 }
 
-export const AttackPathVisualization = ({ isDarkMode }: AttackPathVisualizationProps) => {
+export const AttackPathVisualization = ({ isDarkMode, vulnerabilities }: AttackPathVisualizationProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     if (!svgRef.current) return;
 
-    // Sample attack path data
-    const data = {
+    // Default attack path data
+    let data = {
       nodes: [
         { id: 'entry', label: 'Entry Point', type: 'entry' },
         { id: 'vuln1', label: 'XSS Vulnerability', type: 'vulnerability' },
@@ -25,6 +30,26 @@ export const AttackPathVisualization = ({ isDarkMode }: AttackPathVisualizationP
         { source: 'vuln2', target: 'target', type: 'compromise' }
       ]
     };
+
+    if (vulnerabilities && vulnerabilities.length > 0) {
+      const nodes = [{ id: 'entry', label: 'Entry Point', type: 'entry' }];
+      const links: any[] = [];
+
+      vulnerabilities.forEach((vuln, index) => {
+        const nodeId = `vuln_${index}`;
+        const label = vuln.type.toUpperCase();
+        nodes.push({ id: nodeId, label, type: 'vulnerability' });
+        
+        const sourceId = index === 0 ? 'entry' : `vuln_${index - 1}`;
+        const linkType = index === 0 ? 'attack' : 'escalation';
+        links.push({ source: sourceId, target: nodeId, type: linkType });
+      });
+
+      nodes.push({ id: 'target', label: 'Target System', type: 'target' });
+      links.push({ source: `vuln_${vulnerabilities.length - 1}`, target: 'target', type: 'compromise' });
+
+      data = { nodes, links };
+    }
 
     const width = 800;
     const height = 400;
@@ -106,7 +131,7 @@ export const AttackPathVisualization = ({ isDarkMode }: AttackPathVisualizationP
       event.subject.fx = null;
       event.subject.fy = null;
     }
-  }, [isDarkMode]);
+  }, [isDarkMode, vulnerabilities]);
 
   return (
     <div className="w-full overflow-x-auto">

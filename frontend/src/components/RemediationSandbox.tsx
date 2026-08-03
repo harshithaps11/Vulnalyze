@@ -15,9 +15,11 @@ export interface RemediationSandboxProps {
   initialCode: string;
   onCodeChange: (newCode: string) => void;
   isDarkMode?: boolean;
+  targetLine?: number;
+  onVulnerabilitiesChange?: (vulnerabilities: Vulnerability[]) => void;
 }
 
-export const RemediationSandbox = ({ initialCode, onCodeChange, isDarkMode = true }: RemediationSandboxProps) => {
+export const RemediationSandbox = ({ initialCode, onCodeChange, isDarkMode = true, targetLine, onVulnerabilitiesChange }: RemediationSandboxProps) => {
   const [code, setCode] = useState(initialCode);
   const [vulnerabilities, setVulnerabilities] = useState<Vulnerability[]>([]);
   const [isScanning, setIsScanning] = useState(false);
@@ -45,7 +47,18 @@ export const RemediationSandbox = ({ initialCode, onCodeChange, isDarkMode = tru
 
   useEffect(() => {
     setCode(initialCode);
+    scanCode(initialCode);
   }, [initialCode]);
+
+  useEffect(() => {
+    if (editorRef.current && targetLine) {
+      setTimeout(() => {
+        editorRef.current.revealLineInCenter(targetLine);
+        editorRef.current.setPosition({ lineNumber: targetLine, column: 1 });
+        editorRef.current.focus();
+      }, 200);
+    }
+  }, [targetLine, editorRef.current]);
 
   const handleEditorDidMount = (editor: any, monaco: Monaco) => {
     editorRef.current = editor;
@@ -118,6 +131,7 @@ export const RemediationSandbox = ({ initialCode, onCodeChange, isDarkMode = tru
       const wasmRawResults = await scanCodeForVulnerabilities(codeToScan);
       const processedResults = processWasmResults(codeToScan, wasmRawResults);
       setVulnerabilities(processedResults);
+      onVulnerabilitiesChange?.(processedResults);
     } catch (error) {
       console.error('Error scanning code with WASM:', error);
     } finally {

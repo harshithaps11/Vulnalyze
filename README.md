@@ -1,150 +1,134 @@
+# Vulnalyze 🛡️
 
-# Vulnalyze
-🛡️# Project Name
-
-**A Next-Generation OWASP-Inspired Scanner with Live Remediation, Attack Path Visualization, AI Analysis, and Team Warfare Mode**
-
----
-<img width="1860" height="922" alt="Screenshot 2025-09-09 131813" src="https://github.com/user-attachments/assets/b45f1e54-e606-4792-97fc-f27d12ab7432" />
-<img width="1858" height="899" alt="image" src="https://github.com/user-attachments/assets/06949e1c-d60e-41cc-a6c1-648d76121ec2" />
-<img width="1854" height="921" alt="image" src="https://github.com/user-attachments/assets/480348e5-6001-4d27-92d3-d2ab1a92eeb0" />
-<img width="1732" height="894" alt="image" src="https://github.com/user-attachments/assets/6f8b2c55-e91a-43f6-97e3-fef0c27c8490" />
-<img width="1845" height="779" alt="image" src="https://github.com/user-attachments/assets/9d226fdb-cf2e-4a5d-8006-8712c5d89edc" />
-
-
-
-## Table of Contents
-
-- [Description](#description)
-- [Existing Solutions Gap](#existing-solutions-gap)
-- [Your Potential Novelty](#your-potential-novelty)
-- [Features](#features)
-- [Setup and Run](#setup-and-run)
-- [Usage](#usage)
-- [License](#license)
+**AI-powered security vulnerability scanner** — static code analysis + dynamic DAST scanning with a beautiful React dashboard.
 
 ---
 
-## Description
+## Quick Start (Docker)
 
-This project redefines vulnerability scanning by combining advanced detection, instant remediation, interactive visualization, AI-powered context analysis, and gamified team collaboration. It addresses the shortcomings of traditional OWASP scanners and introduces innovative features for education, real-time feedback, and community engagement.
+```bash
+git clone https://github.com/your-username/Vulnalyze.git
+cd Vulnalyze
 
----
+# Copy and configure environment variables
+cp .env.example .env
 
-## Existing Solutions Gap
+# Start everything — PostgreSQL + FastAPI backend + React frontend
+docker compose up
+```
 
-- **Focus only on detection:** Most OWASP scanners identify vulnerabilities but provide little beyond detection.
-- **Lack educational components:** Users are left to interpret findings without guidance or learning resources.
-- **No collaboration features:** Teams cannot collaborate or compete in real time.
-- **Poor visualization:** Reports and data are not presented in interactive or intuitive ways.
+| Service  | URL                        |
+|----------|----------------------------|
+| Frontend | http://localhost:5173      |
+| Backend  | http://localhost:8000      |
+| API Docs | http://localhost:8000/docs |
 
----
-
-## Your Potential Novelty
-
-### Live Remediation Sandbox
-
-- **In-browser code fixing with instant rescan**
-- **Implementation:** Monaco Editor + WebAssembly security checks
-
-### Attack Path Visualization
-
-- **Interactive graph showing vulnerability relationships**
-- **Implementation:** D3.js force-directed graphs
-
-### AI-Powered Context Analysis
-
-- **LLM-based vulnerability explanation**
-- **Implementation:** Open router API
-
-### Team Warfare Mode
-
-- **Compete to find/fix vulnerabilities fastest**
-- **Implementation:** Real-time leaderboards
+> **Default credentials:** `admin@vulnalyze.com` / `admin123`
 
 ---
 
-## Features
+## Project Structure
 
-- **OWASP Top 10 Scanning**  
-  Detects the most critical web vulnerabilities using both static and dynamic analysis.
-
-- **Live Remediation Sandbox**  
-  Edit vulnerable code directly in-browser with Monaco Editor and instantly re-scan to verify fixes.
-
-- **AI-Powered Explanations**  
-  Get plain-English vulnerability explanations and tailored fix suggestions from an integrated AI assistant.
-
-- **Attack Path Visualization**  
-  Interactive graph shows how vulnerabilities can be chained together for real-world exploits.
-
-- **Team Collaboration**  
-  Assign vulnerabilities, comment in real time, and manage security tasks as a team.
-
-- **False Positive Management**  
-  Mark and track false positives for accurate reporting and continuous learning.
-
-- **Custom Payload Testing**  
-  Advanced users can supply their own attack payloads to test for edge-case vulnerabilities.
-
-- **Scan History & Reporting**  
-  All scans and actions are securely stored for future reference and compliance.
-
-- **Export Reports as PDF**  
-  Download well-formatted PDF reports of your scan results for sharing or documentation.
+```
+Vulnalyze/
+├── frontend/                  # React + Vite + TypeScript
+│   ├── src/
+│   │   ├── components/        # UI components (dashboard, scan, results)
+│   │   ├── pages/             # Route-level pages
+│   │   ├── services/          # API client (axios)
+│   │   └── data/              # Mock data (fallback only)
+│   ├── Dockerfile
+│   └── package.json
+│
+├── backend/                   # FastAPI + SQLAlchemy
+│   ├── app/
+│   │   ├── api/               # Route handlers
+│   │   ├── core/              # Config, settings
+│   │   ├── db/                # DB session
+│   │   ├── models/            # SQLAlchemy ORM models
+│   │   ├── schemas/           # Pydantic schemas
+│   │   ├── services/
+│   │   │   └── scanner.py     # Static (regex/AST) + dynamic (ZAP) scanner
+│   │   └── main.py            # FastAPI app entry point
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── setup_db.py            # DB init + seed script
+│
+├── docker-compose.yml         # One-command startup
+├── .env.example               # Environment variable template
+└── README.md
+```
 
 ---
 
-## Setup and Run
+## Running Without Docker
 
-### Prerequisites
+### Backend
 
-- **Node.js** (LTS version recommended) – [Download here](https://nodejs.org/)
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate        # Windows
+# source venv/bin/activate   # macOS/Linux
 
-### Installation
+pip install -r requirements.txt
+python setup_db.py           # Creates SQLite DB + seed data
+uvicorn app.main:app --reload --port 8000
+```
 
-1. **Clone the repository:**
-git clone <your-repository-url>
-cd vulnalyze
+### Frontend
 
-2. **Install dependencies:**
+```bash
+cd frontend
 npm install
-
-
-
-### Running the Project
-
-- **Start the development server:**
+cp .env.example .env.local   # Set VITE_API_BASE_URL=http://localhost:8000
 npm run dev
-
-
-- **Note:** The project may **not run on `localhost:3000`** by default.  
-  - For Next.js, it often runs on `localhost:3000` by default, but check your terminal output for the actual address.
-  - For Vite or other frameworks, the port may differ and will be displayed in your terminal after running `npm run dev`.
+```
 
 ---
 
-## Usage
+## How Scanning Works
 
-1. **Start the development server with:**
-npm run dev
+```
+User submits scan
+      ↓
+POST /api/v1/scans  (FastAPI)
+      ↓
+Background Task starts
+      ↓
+Static Scanner (regex/AST on source code)
+  + Dynamic Scanner (OWASP ZAP or fallback)
+      ↓
+Results saved to PostgreSQL
+      ↓
+GET /api/v1/scans/{uuid}  →  React Dashboard
+```
 
-
-2. **Or access the live deployed version here:**  
-[https://vulnalyze.netlify.app](https://vulnalyze.netlify.app)
-3. **Upload or paste code, explore vulnerabilities, and use the live remediation sandbox.**
-4. **Compete with teammates in Team Warfare Mode for added fun!**
+The scanner detects:
+- **XSS** — unsafe `innerHTML` without `DOMPurify`
+- **SQL Injection** — string concatenation in SQL queries
+- **Command Injection** — `eval()`, `exec()`, `spawn()`
+- **Weak Crypto** — MD5 / SHA-1 usage
 
 ---
 
+## Tech Stack
 
---tip:
-Replace <your-repository-url> with the actual URL of your Vulnalyze repository.
-Check your terminal output after running npm run dev to see the exact local address where your app is running.
+| Layer     | Technology                            |
+|-----------|---------------------------------------|
+| Frontend  | React 18, TypeScript, Vite, Tailwind  |
+| Backend   | FastAPI, SQLAlchemy (async), uvicorn  |
+| Database  | PostgreSQL (Docker) / SQLite (local)  |
+| Scanner   | Semgrep (optional) + regex/AST fallback + OWASP ZAP (optional) |
+| Auth      | JWT (python-jose) + bcrypt            |
 
+---
 
+## Environment Variables
 
-## License
+See [`.env.example`](.env.example) for all available variables.
 
-This project is licensed under a proprietary license.  
-**Do not copy, modify, or redistribute without permission.**
+Key variables:
+- `POSTGRES_*` — database connection (auto-configured in Docker)
+- `SECRET_KEY` — JWT signing key (**change in production**)
+- `OPENROUTER_API_KEY` — AI-powered remediation suggestions (optional)
