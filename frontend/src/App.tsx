@@ -10,24 +10,31 @@ import { NotFound } from './pages/NotFound';
 import { RemediationPage } from './pages/RemediationPage';
 import { Profile } from './pages/Profile';
 import { Settings } from './pages/Settings';
+import { Login } from './pages/Login';
+import { authApi } from './services/apiClient';
+
+function ProtectedRoute({ children }: { children: React.ReactElement }) {
+  return authApi.isAuthenticated() ? children : <Navigate to="/login" replace />;
+}
 
 function App() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="min-h-screen bg-dark-900 flex flex-col">
-        <Header />
+        {authApi.isAuthenticated() ? <Header /> : null}
         <main className="flex-1">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/scan" element={<ScanConfiguration />} />
-            <Route path="/scan/progress/:scanId" element={<ScanProgress />} />
-            <Route path="/results" element={<ScanResults />} />
-            <Route path="/results/:scanId" element={<ScanResults />} />
-            <Route path="/team" element={<Team />} />
-            <Route path="/remediation" element={<RemediationPage />} />
-            <Route path="/reports" element={<Navigate to="/results" replace />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/scan" element={<ProtectedRoute><ScanConfiguration /></ProtectedRoute>} />
+            <Route path="/scan/progress/:scanId" element={<ProtectedRoute><ScanProgress /></ProtectedRoute>} />
+            <Route path="/results" element={<ProtectedRoute><ScanResults /></ProtectedRoute>} />
+            <Route path="/results/:scanId" element={<ProtectedRoute><ScanResults /></ProtectedRoute>} />
+            <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
+            <Route path="/remediation" element={<ProtectedRoute><RemediationPage /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><Navigate to="/results" replace /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

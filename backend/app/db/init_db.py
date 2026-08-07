@@ -1,35 +1,23 @@
 import asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.db.session import AsyncSessionLocal
-from app.models.models import User, Organization, UserRole
+from pathlib import Path
 from app.core.config import get_settings
-from passlib.context import CryptContext
+from setup_db import setup_sqlite_database
 
 settings = get_settings()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+_initialized = False
 
 async def init_db() -> None:
-    async with AsyncSessionLocal() as session:
-        # Create default organization
-        org = Organization(
-            name="Default Organization",
-            description="Default organization for initial setup"
-        )
-        session.add(org)
-        await session.commit()
-        await session.refresh(org)
+    global _initialized
+    if _initialized:
+        return
 
-        # Create admin user
-        admin_user = User(
-            email="admin@vulnalyze.com",
-            hashed_password=pwd_context.hash("admin123"),  # Change this in production!
-            full_name="Admin User",
-            role=UserRole.ADMIN,
-            organization_id=org.id
-        )
-        session.add(admin_user)
-        await session.commit()
+    db_path = settings.SQLALCHEMY_DATABASE_URI.replace("sqlite+aiosqlite:///", "", 1)
+    if db_path and not db_path.startswith("postgres"):
+        Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+
+    setup_sqlite_database()
+    _initialized = True
 
 async def main() -> None:
     print("Creating initial data")

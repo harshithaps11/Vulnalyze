@@ -1,17 +1,23 @@
+import os
+from pathlib import Path
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from app.core.config import get_settings
 
 settings = get_settings()
-
-if settings.SQLALCHEMY_DATABASE_URI.startswith("sqlite"):
+db_uri = settings.SQLALCHEMY_DATABASE_URI
+if db_uri.startswith("sqlite"):
+    db_path = os.getenv("VULNALYZE_DB_PATH")
+    if db_path:
+        db_path = str(Path(db_path).resolve())
+        db_uri = f"sqlite+aiosqlite:///{db_path}"
     engine = create_async_engine(
-        settings.SQLALCHEMY_DATABASE_URI,
+        db_uri,
         echo=False,
     )
 else:
     engine = create_async_engine(
-        settings.SQLALCHEMY_DATABASE_URI,
+        db_uri,
         pool_pre_ping=True,
         pool_size=20,
         max_overflow=10,

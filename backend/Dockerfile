@@ -1,25 +1,29 @@
-FROM python:3.12-slim
+FROM python:3.12-slim AS builder
 
-WORKDIR /code
+WORKDIR /build
 
-# Install system dependencies
+# Build wheels in an isolated stage so the runtime image stays smaller.
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip wheel --wheel-dir /wheels -r requirements.txt
 
-# Copy application code
+FROM python:3.12-slim
+
+WORKDIR /code
+
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache-dir /wheels/*
+
 COPY app/ ./app/
 COPY setup_db.py .
 
 # Create data directory for SQLite fallback
 RUN mkdir -p backend/data
 
-# Expose the backend port
 EXPOSE 8000
 
 # Startup: run DB setup (creates tables + seed data) then launch uvicorn

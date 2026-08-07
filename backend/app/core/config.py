@@ -2,6 +2,8 @@ from pydantic_settings import BaseSettings
 from pydantic import Field, field_validator
 from typing import Optional
 from functools import lru_cache
+from pathlib import Path
+import os
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Vulnalyze"
@@ -13,6 +15,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    OPENROUTER_API_KEY: Optional[str] = None
     
     # Database
     POSTGRES_SERVER: Optional[str] = None
@@ -49,6 +52,7 @@ class Settings(BaseSettings):
             "http://127.0.0.1:5173",
         ]
     )
+    FRONTEND_URL: Optional[str] = "http://localhost:5173"
     
     class Config:
         case_sensitive = True
@@ -70,7 +74,10 @@ class Settings(BaseSettings):
                     f"@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
                 )
             else:
-                self.SQLALCHEMY_DATABASE_URI = "sqlite+aiosqlite:///backend/data/vulnalyze.db"
+                db_path = (Path(__file__).resolve().parent.parent.parent / "data" / "vulnalyze.db").resolve()
+                db_path.parent.mkdir(parents=True, exist_ok=True)
+                self.SQLALCHEMY_DATABASE_URI = f"sqlite+aiosqlite:///{db_path.as_posix()}"
+                os.environ["VULNALYZE_DB_PATH"] = str(db_path)
 
 @lru_cache()
 def get_settings() -> Settings:

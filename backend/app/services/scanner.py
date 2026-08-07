@@ -1,6 +1,8 @@
 import asyncio
 import json
 import os
+import tempfile
+from pathlib import Path
 from typing import List, Dict, Any
 from app.core.config import get_settings
 from app.models.models import Vulnerability, VulnerabilitySeverity
@@ -48,16 +50,18 @@ class ScannerService:
 
     async def run_semgrep(self, code: str) -> List[Dict[str, Any]]:
         """Run Semgrep static analysis on the provided code."""
+        temp_file_path = None
         try:
-            # Create temporary file with code
-            with open('temp_code.js', 'w') as f:
-                f.write(code)
+            # Create a disposable temp file instead of writing into the repo.
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False, encoding='utf-8') as temp_file:
+                temp_file.write(code)
+                temp_file_path = temp_file.name
             
             import subprocess
             if not os.path.exists(settings.SEMGREP_RULES_PATH):
                 raise FileNotFoundError("Semgrep rules path does not exist.")
                 
-            cmd = ["semgrep", "scan", "--config", settings.SEMGREP_RULES_PATH, "--json", "temp_code.js"]
+            cmd = ["semgrep", "scan", "--config", settings.SEMGREP_RULES_PATH, "--json", temp_file_path]
             res = subprocess.run(cmd, capture_output=True, text=True, check=True)
             data = json.loads(res.stdout)
             
@@ -79,6 +83,12 @@ class ScannerService:
         except Exception as e:
             print(f"Semgrep execution failed, using lightweight AST/regex fallback scanner: {str(e)}")
             return self._fallback_static_scan(code)
+        finally:
+            if temp_file_path:
+                try:
+                    Path(temp_file_path).unlink(missing_ok=True)
+                except Exception:
+                    pass
 
     def _fallback_static_scan(self, code: str) -> List[Dict[str, Any]]:
         vulnerabilities = []

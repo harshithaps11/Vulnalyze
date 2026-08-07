@@ -59,3 +59,23 @@ def test_ai_fix_endpoint():
         }
     )
     assert response.status_code in [200, 500]
+
+
+def test_scan_summary_endpoint():
+    response = client.post(
+        "/api/v1/scans",
+        json={
+            "target_url": "http://summary-target.com",
+            "scan_type": "hybrid",
+            "source_code": "function vulnerable() { eval('demo'); }"
+        }
+    )
+    assert response.status_code == 200, f"Failed to create scan: {response.text}"
+    scan_uuid = response.json()["uuid"]
+
+    summary_response = client.get(f"/api/v1/scans/{scan_uuid}/summary")
+    assert summary_response.status_code == 200, f"Failed to fetch scan summary: {summary_response.text}"
+    summary_data = summary_response.json()
+    assert summary_data["scan_id"] == scan_uuid
+    assert "severity_breakdown" in summary_data
+    assert isinstance(summary_data["total_vulnerabilities"], int)

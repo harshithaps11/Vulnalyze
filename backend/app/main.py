@@ -11,9 +11,9 @@ from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 from uuid import UUID
 import httpx
-import os
 
 from app.core.config import get_settings
+from app.db.init_db import init_db
 from app.db.session import get_db
 from app.models.models import User, Scan, Vulnerability, ScanStatus, VulnerabilitySeverity
 from app.services.scanner import ScannerService, run_hybrid_scan, run_scan_task_in_background
@@ -21,10 +21,18 @@ from app.services.scanner import ScannerService, run_hybrid_scan, run_scan_task_
 settings = get_settings()
 app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION)
 
+@app.on_event("startup")
+async def startup_event() -> None:
+    await init_db()
+
+cors_origins = list(settings.BACKEND_CORS_ORIGINS)
+if settings.FRONTEND_URL and settings.FRONTEND_URL not in cors_origins:
+    cors_origins.append(settings.FRONTEND_URL)
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -223,6 +231,52 @@ async def get_scan(
         raise HTTPException(status_code=404, detail="Scan not found")
     return scan
 
+@app.get(f"{settings.API_V1_STR}/scans/{{scan_id}}/summary")
+async def get_scan_summary(
+    scan_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(Scan)
+        .options(selectinload(Scan.vulnerabilities))
+        .where(Scan.uuid == scan_id)
+        .where(Scan.organization_id == current_user.organization_id)
+    )
+    scan = result.scalar_one_or_none()
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    vulnerabilities = scan.vulnerabilities or []
+    severity_breakdown = {
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 0,
+        "info": 0,
+    }
+
+    for vuln in vulnerabilities:
+        severity = (vuln.severity.value if hasattr(vuln.severity, "value") else str(vuln.severity)).lower()
+        if severity in severity_breakdown:
+            severity_breakdown[severity] += 1
+        else:
+            severity_breakdown["info"] += 1
+
+    status_value = scan.status.value if hasattr(scan.status, "value") else str(scan.status)
+    risk_level = "critical" if severity_breakdown["critical"] > 0 else "high" if severity_breakdown["high"] > 0 else "medium" if severity_breakdown["medium"] > 0 else "low"
+
+    return {
+        "scan_id": scan.uuid,
+        "status": status_value,
+        "target_url": scan.target_url,
+        "scan_type": scan.scan_type,
+        "total_vulnerabilities": len(vulnerabilities),
+        "severity_breakdown": severity_breakdown,
+        "risk_level": risk_level,
+        "generated_at": datetime.utcnow().isoformat(),
+    }
+
 @app.put(f"{settings.API_V1_STR}/scans/{{scan_id}}/vulnerabilities/{{vuln_id}}")
 async def mark_false_positive(
     scan_id: UUID,
@@ -278,7 +332,7 @@ async def get_scan_status(
     }
 
 # OpenRouter API configuration
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
+OPENROUTER_API_KEY = settings.OPENROUTER_API_KEY or ""
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 class CodeRequest(BaseModel):

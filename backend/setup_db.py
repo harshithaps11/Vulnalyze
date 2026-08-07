@@ -3,12 +3,14 @@ import sys
 import sqlite3
 from pathlib import Path
 
+BASE_DIR = Path(__file__).resolve().parent
+
 def setup_sqlite_database() -> bool:
     """Set up SQLite database and initial data matching SQLAlchemy models exactly."""
     print("\nSetting up SQLite database...")
     
     # Create database directory if it doesn't exist
-    db_dir = Path("backend/data")
+    db_dir = BASE_DIR / "data"
     db_dir.mkdir(parents=True, exist_ok=True)
     
     # Create database file

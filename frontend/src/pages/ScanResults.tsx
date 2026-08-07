@@ -1,12 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { VulnerabilityTable } from '../components/results/VulnerabilityTable';
 import { Button } from '../components/ui/Button';
-import { Download, FileText, RefreshCw } from 'lucide-react';
+import { Card } from '../components/ui/Card';
+import { Badge } from '../components/ui/Badge';
+import { Download, FileText, RefreshCw, ShieldAlert, Radar } from 'lucide-react';
 import { useParams } from 'react-router-dom';
+import { apiClient } from '../services/apiClient';
 
 export function ScanResults() {
   const { scanId } = useParams();
+  const [summary, setSummary] = useState<any>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+
+  useEffect(() => {
+    if (!scanId) {
+      setSummary(null);
+      return;
+    }
+
+    setSummaryLoading(true);
+    apiClient.get(`/scans/${scanId}/summary`)
+      .then((response) => setSummary(response.data))
+      .catch((error) => {
+        console.error('Failed to load scan summary:', error);
+        setSummary(null);
+      })
+      .finally(() => setSummaryLoading(false));
+  }, [scanId]);
 
   const handlePrint = () => {
     const reportElement = document.querySelector('.table-container');
@@ -147,6 +168,46 @@ export function ScanResults() {
       }
     >
       <div className="space-y-6">
+        {scanId && (
+          <Card title="Scan Summary" subtitle="A concise view of the latest findings from the backend">
+            {summaryLoading ? (
+              <p className="text-sm text-dark-400">Loading scan summary...</p>
+            ) : summary ? (
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="rounded-lg border border-dark-700 bg-dark-800/70 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-dark-300">
+                    <ShieldAlert size={16} className="text-severity-critical" />
+                    Total Findings
+                  </div>
+                  <p className="mt-3 text-3xl font-semibold text-white">{summary.total_vulnerabilities}</p>
+                </div>
+                <div className="rounded-lg border border-dark-700 bg-dark-800/70 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-dark-300">
+                    <Radar size={16} className="text-primary-400" />
+                    Risk Level
+                  </div>
+                  <div className="mt-3">
+                    <Badge variant={summary.risk_level === 'critical' ? 'critical' : summary.risk_level === 'high' ? 'high' : summary.risk_level === 'medium' ? 'medium' : 'low'}>
+                      {summary.risk_level?.toUpperCase()}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-dark-700 bg-dark-800/70 p-4">
+                  <div className="text-sm font-medium text-dark-300">Severity Breakdown</div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {Object.entries(summary.severity_breakdown || {}).map(([severity, count]) => (
+                      <Badge key={severity} variant={severity as any}>
+                        {severity}: {count as number}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-dark-400">The backend did not return a summary for this scan yet.</p>
+            )}
+          </Card>
+        )}
         <VulnerabilityTable scanId={scanId} />
       </div>
     </PageContainer>
