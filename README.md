@@ -122,6 +122,10 @@ The scanner detects:
 | Scanner   | Semgrep (optional) + regex/AST fallback + OWASP ZAP (optional) |
 | Auth      | JWT (python-jose) + bcrypt            |
 
+## CI/CD
+
+Vulnalyze includes a GitHub Actions pipeline that runs backend tests and frontend production builds on every pull request. On pushes to `main` or version tags, the workflow also builds and publishes Docker images for the backend and frontend to GitHub Container Registry.
+
 ---
 
 ## Environment Variables
