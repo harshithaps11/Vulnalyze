@@ -89,7 +89,7 @@ export function ScanConfigurationForm({ onSubmit }: ScanConfigurationFormProps) 
             <label className="block text-sm font-medium text-dark-300 mb-2">
               Scan Type
             </label>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <label className={`border rounded-md p-3 cursor-pointer ${scanType === 'static' ? 'bg-primary-900/30 border-primary-700' : 'border-dark-600 hover:bg-dark-700'}`}>
                 <input
                   type="radio"
@@ -100,7 +100,7 @@ export function ScanConfigurationForm({ onSubmit }: ScanConfigurationFormProps) 
                   className="sr-only"
                 />
                 <p className="text-sm font-medium text-white mb-1">Static Analysis</p>
-                <p className="text-xs text-dark-400">Code review without execution</p>
+                <p className="text-xs text-dark-400">OWASP Top 10 code review (30+ rules)</p>
               </label>
               
               <label className={`border rounded-md p-3 cursor-pointer ${scanType === 'dynamic' ? 'bg-primary-900/30 border-primary-700' : 'border-dark-600 hover:bg-dark-700'}`}>
@@ -113,7 +113,7 @@ export function ScanConfigurationForm({ onSubmit }: ScanConfigurationFormProps) 
                   className="sr-only"
                 />
                 <p className="text-sm font-medium text-white mb-1">Dynamic Analysis</p>
-                <p className="text-xs text-dark-400">Runtime behavior testing</p>
+                <p className="text-xs text-dark-400">HTTP security header scanning</p>
               </label>
               
               <label className={`border rounded-md p-3 cursor-pointer ${scanType === 'hybrid' ? 'bg-primary-900/30 border-primary-700' : 'border-dark-600 hover:bg-dark-700'}`}>
@@ -126,7 +126,20 @@ export function ScanConfigurationForm({ onSubmit }: ScanConfigurationFormProps) 
                   className="sr-only"
                 />
                 <p className="text-sm font-medium text-white mb-1">Hybrid</p>
-                <p className="text-xs text-dark-400">Combined static & dynamic</p>
+                <p className="text-xs text-dark-400">Static code + dynamic headers</p>
+              </label>
+
+              <label className={`border rounded-md p-3 cursor-pointer ${scanType === 'ai_security' ? 'bg-violet-900/30 border-violet-600' : 'border-dark-600 hover:bg-dark-700'}`}>
+                <input
+                  type="radio"
+                  name="scanType"
+                  value="ai_security"
+                  checked={scanType === 'ai_security'}
+                  onChange={() => setScanType('ai_security')}
+                  className="sr-only"
+                />
+                <p className="text-sm font-medium text-white mb-1">⚡ AI Security</p>
+                <p className="text-xs text-dark-400">Prompt injection &amp; LLM threat detection</p>
               </label>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { VulnerabilityTable } from '../components/results/VulnerabilityTable';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { Download, FileText, RefreshCw, ShieldAlert, Radar } from 'lucide-react';
+import { Download, FileText, RefreshCw, ShieldAlert, Radar, BrainCircuit, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { apiClient } from '../services/apiClient';
 
@@ -12,6 +12,27 @@ export function ScanResults() {
   const { scanId } = useParams();
   const [summary, setSummary] = useState<any>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiExpanded, setAiExpanded] = useState(false);
+  const [aiEngine, setAiEngine] = useState<string>('');
+
+  const handleAiAnalyze = async () => {
+    if (!scanId) return;
+    setAiLoading(true);
+    setAiError(null);
+    setAiExpanded(true);
+    try {
+      const res = await apiClient.post(`/scans/${scanId}/ai-analyze`);
+      setAiAnalysis(res.data.analysis);
+      setAiEngine(res.data.engine || '');
+    } catch (err: any) {
+      setAiError('AI analysis failed. Make sure the backend is running.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!scanId) {
@@ -140,6 +161,17 @@ export function ScanResults() {
       description="Detailed findings from your security scan"
       actions={
         <div className="flex gap-2">
+          {scanId && (
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={aiLoading ? <Loader2 size={16} className="animate-spin" /> : <BrainCircuit size={16} />}
+              onClick={handleAiAnalyze}
+              id="ai-analyze-btn"
+            >
+              {aiLoading ? 'Analyzing...' : 'AI Analysis'}
+            </Button>
+          )}
           <Button 
             variant="secondary" 
             size="sm"
@@ -209,6 +241,59 @@ export function ScanResults() {
           </Card>
         )}
         <VulnerabilityTable scanId={scanId} />
+
+        {/* AI Analysis Panel */}
+        {scanId && (
+          <Card>
+            <div
+              className="flex items-center justify-between cursor-pointer"
+              onClick={() => !aiLoading && setAiExpanded(v => !v)}
+              id="ai-analysis-panel-toggle"
+            >
+              <div className="flex items-center gap-2">
+                <BrainCircuit size={18} className="text-violet-400" />
+                <h3 className="text-base font-semibold text-white">AI Security Analysis</h3>
+                {aiEngine && (
+                  <span className="text-xs text-dark-400 font-mono ml-2">via {aiEngine}</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {!aiAnalysis && !aiLoading && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={<BrainCircuit size={14} />}
+                    onClick={(e) => { e.stopPropagation(); handleAiAnalyze(); }}
+                  >
+                    Run AI Analysis
+                  </Button>
+                )}
+                {aiExpanded ? <ChevronUp size={16} className="text-dark-400" /> : <ChevronDown size={16} className="text-dark-400" />}
+              </div>
+            </div>
+
+            {aiExpanded && (
+              <div className="mt-4">
+                {aiLoading && (
+                  <div className="flex items-center gap-3 py-6 text-dark-300">
+                    <Loader2 size={20} className="animate-spin text-violet-400" />
+                    <span>LangChain Security Agent is analyzing vulnerabilities...</span>
+                  </div>
+                )}
+                {aiError && (
+                  <div className="rounded-md bg-severity-critical/10 border border-severity-critical/20 px-4 py-3 text-sm text-severity-critical">
+                    {aiError}
+                  </div>
+                )}
+                {aiAnalysis && !aiLoading && (
+                  <pre className="whitespace-pre-wrap text-sm text-dark-200 font-mono bg-dark-900 rounded-md p-4 overflow-x-auto max-h-[600px] overflow-y-auto leading-relaxed">
+                    {aiAnalysis}
+                  </pre>
+                )}
+              </div>
+            )}
+          </Card>
+        )}
       </div>
     </PageContainer>
   );

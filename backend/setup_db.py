@@ -102,13 +102,16 @@ def setup_sqlite_database() -> bool:
         VALUES (1, 'Default Organization', 'Default organization for all users')
         """)
         
+        # Generate hash for admin123 using passlib
+        from passlib.context import CryptContext
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        admin_hash = pwd_context.hash("admin123")
+        
         # Insert Admin User (password: admin123)
         cursor.execute("""
         INSERT OR IGNORE INTO user (id, email, hashed_password, full_name, role, is_active, organization_id)
-        VALUES (1, 'admin@vulnalyze.com', 
-        '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
-        'Admin User', 'ADMIN', TRUE, 1)
-        """)
+        VALUES (1, 'admin@vulnalyze.com', ?, 'Admin User', 'ADMIN', TRUE, 1)
+        """, (admin_hash,))
         
         conn.commit()
         print("Database tables created")
