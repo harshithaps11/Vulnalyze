@@ -15,6 +15,7 @@ export function ScanConfigurationForm({ onSubmit }: ScanConfigurationFormProps) 
   const [password, setPassword] = useState('');
   const [excludePaths, setExcludePaths] = useState('');
   const [customPayload, setCustomPayload] = useState('');
+  const [sourceCode, setSourceCode] = useState('');
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +23,7 @@ export function ScanConfigurationForm({ onSubmit }: ScanConfigurationFormProps) 
     const config = {
       url,
       type: scanType,
+      sourceCode,
       advanced: showAdvanced ? {
         authentication: {
           username,
@@ -65,23 +67,21 @@ export function ScanConfigurationForm({ onSubmit }: ScanConfigurationFormProps) 
             </p>
           </div>
           
-          {/* Upload Code Option */}
-          <div className="border border-dashed border-dark-600 rounded-md p-4 text-center">
-            <div className="space-y-2">
-              <Upload size={24} className="mx-auto text-dark-400" />
-              <p className="text-sm text-dark-300">
-                Or drag and drop code files here
-              </p>
-              <p className="text-xs text-dark-400">
-                Supported formats: .zip, .tar.gz, or individual files
-              </p>
-              <button
-                type="button"
-                className="mt-2 inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-primary-400 border border-primary-700/50 hover:bg-primary-900/30"
-              >
-                Browse Files
-              </button>
+          {/* Source Code Textarea / Upload */}
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label htmlFor="sourceCode" className="block text-sm font-medium text-dark-300">
+                Source Code Snippet (Optional)
+              </label>
+              <span className="text-xs text-dark-400">Paste code to run static analysis</span>
             </div>
+            <textarea
+              id="sourceCode"
+              value={sourceCode}
+              onChange={(e) => setSourceCode(e.target.value)}
+              className="input font-mono text-xs h-32 resize-y"
+              placeholder={`// Paste your Python, JavaScript, Java, or SQL code here...\n\nfunction example() {\n  document.getElementById("out").innerHTML = location.hash;\n}`}
+            ></textarea>
           </div>
           
           {/* Scan Type Selection */}

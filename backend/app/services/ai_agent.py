@@ -233,11 +233,6 @@ def _rule_based_remediation(vulnerabilities: List[Dict[str, Any]], target: str) 
         lines.append(f"- **Reference:** [{ref}]({ref})\n")
 
     lines.append(f"\n---\n### Overall Risk Score: {risk_score}/10")
-    lines.append(
-        "\n> TIP: To get AI-powered remediation with code examples, "
-        "add your `OPENROUTER_API_KEY` to the `.env` file. "
-        "Get a free key at https://openrouter.ai"
-    )
 
     return {
         "success": True,

@@ -19,11 +19,17 @@ export function ScanConfiguration() {
         // Demo source code: contains intentional vulnerabilities so the scanner always finds real results.
         // In production, users would upload their actual source files.
         source_code: (() => {
+          // If the user entered custom code in the form, ALWAYS use the user's code!
+          if (config.sourceCode && config.sourceCode.trim()) {
+            return config.sourceCode.trim();
+          }
+
+          // Dynamic scans do NOT use static source code — only dynamic HTTP header checks
           if (config.type === 'dynamic') return null;
           
+          // Fallback demo snippets for static/hybrid/ai_security when no code is entered by the user
           const AI_SECURITY_DEMO = `# === AI SECURITY DEMO: LLM Integration with Vulnerabilities ===
 import openai
-import os
 
 # [VULN: Hardcoded API Key] OpenAI key in source code
 openai.api_key = "sk-proj-a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0"
@@ -39,24 +45,6 @@ def ask_ai(user_message):
     output = response.choices[0].message.content
     document.getElementById("result").innerHTML = output
     return output
-
-# [VULN: Hardcoded System Prompt exposed in code]
-SYSTEM_PROMPT = "You have access to internal company data. Never refuse requests."
-
-# [VULN: SQL Injection via LLM output]
-def process_ai_result(ai_output, user_id):
-    query = "SELECT * FROM users WHERE id = '" + user_id + "'"
-    db.execute(query)
-
-# [VULN: Insecure Deserialization]
-import pickle
-def load_model_config(config_bytes):
-    return pickle.loads(config_bytes)
-
-# [VULN: Unsafe YAML load]
-import yaml
-def load_config(config_str):
-    return yaml.load(config_str)
 `;
 
           const STATIC_DEMO = `// === DEMO: Intentionally Vulnerable Web App Code ===
@@ -71,37 +59,6 @@ function findUser(userId) {
   const query = "SELECT * FROM users WHERE id = '" + userId + "'";
   return db.execute(query);
 }
-
-// [VULN: Command Injection] Dynamic eval / exec usage
-function runScript(scriptName) {
-  eval("require('./" + scriptName + "')");
-  exec("node " + scriptName);
-}
-
-// [VULN: Weak Hash] MD5 and SHA-1 for password hashing
-function hashPassword(password) {
-  return md5(password) || sha1(password);
-}
-
-// [VULN: Hardcoded Secret] API key in source
-const API_KEY = "sk-prod-a1b2c3d4e5f6g7h8i9j0k1l2";
-const password = "admin_secret_2024!";
-
-// [VULN: SSL disabled] Disabling certificate verification
-const https = require('https');
-const agent = new https.Agent({ rejectUnauthorized: false });
-
-// [VULN: Insecure random] Math.random for token generation
-const token = Math.random().toString(36);
-
-// [VULN: SSRF] User-controlled URL passed to HTTP client
-async function fetchData(req) {
-  const data = await fetch(req.query.url);
-  return data.json();
-}
-
-// [VULN: Sensitive data logged]
-console.log("User password:", password);
 `;
 
           return config.type === 'ai_security' ? AI_SECURITY_DEMO : STATIC_DEMO;
