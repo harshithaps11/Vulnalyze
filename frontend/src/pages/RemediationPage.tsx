@@ -148,8 +148,8 @@ export const RemediationPage = () => {
   const [activeTab, setActiveTab] = useState('editor');
   const [selectedSnippet, setSelectedSnippet] = useState<typeof codeSnippets[0] | null>(null);
   const [showCollaborators, setShowCollaborators] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => !document.body.classList.contains('light'));
   const [showSettings, setShowSettings] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
   const [autoSave, setAutoSave] = useState(true);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportFormat, setExportFormat] = useState('json');
@@ -190,13 +190,13 @@ export const RemediationPage = () => {
   }, []);
 
   useEffect(() => {
-    // Apply dark mode class to body
-    if (isDarkMode) {
-      document.body.classList.add('dark');
-    } else {
-      document.body.classList.remove('dark');
-    }
-  }, [isDarkMode]);
+    // Observer to watch document.body class changes for light/dark mode
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(!document.body.classList.contains('light'));
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
 
   const handleCodeChange = (newCode: string) => {
     setCode(newCode);
@@ -603,39 +603,19 @@ export const RemediationPage = () => {
                 Fix security vulnerabilities in real-time with AI-powered suggestions
               </p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <button
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  isDarkMode
-                    ? 'text-gray-900 bg-yellow-400 hover:bg-yellow-500'
-                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                }`}
+                onClick={handleAnalyze}
+                disabled={isAnalyzing}
+                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-500 transition-colors"
+                title="Run full AI security review"
               >
-                {isDarkMode ? (
-                  <Sun className="w-4 h-4 mr-2" />
+                {isAnalyzing ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <Moon className="w-4 h-4 mr-2" />
+                  <Brain className="w-4 h-4 mr-2" />
                 )}
-                {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-              </button>
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  isDarkMode
-                    ? 'text-white bg-gray-800 hover:bg-gray-700'
-                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </button>
-              <button
-                onClick={handleShare}
-                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
+                Run AI Analysis
               </button>
               <button
                 onClick={() => setShowHistoryModal(true)}
@@ -645,38 +625,15 @@ export const RemediationPage = () => {
                 History
               </button>
               <button
-                onClick={() => setShowAttackPath(!showAttackPath)}
-                className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg ${
-                  isDarkMode
-                    ? 'text-white bg-purple-600 hover:bg-purple-700'
-                    : 'text-white bg-purple-600 hover:bg-purple-700'
-                }`}
+                onClick={handleShare}
+                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
               >
-                <Network className="w-4 h-4 mr-2" />
-                Attack Path
-              </button>
-              <button
-                onClick={() => scrollToSection(aiExplainerRef, 'ai-explainer')}
-                className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  activeSection === 'ai-explainer'
-                    ? 'bg-indigo-700 text-white'
-                    : isDarkMode
-                    ? 'text-white bg-indigo-600 hover:bg-indigo-700'
-                    : 'text-white bg-indigo-600 hover:bg-indigo-700'
-                }`}
-              >
-                <Brain className="w-4 h-4 mr-2" />
-                AI Explainer
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
               </button>
               <button
                 onClick={() => scrollToSection(testPayloadRef, 'test-payload')}
-                className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  activeSection === 'test-payload'
-                    ? 'bg-red-700 text-white'
-                    : isDarkMode
-                    ? 'text-white bg-red-600 hover:bg-red-700'
-                    : 'text-white bg-red-600 hover:bg-red-700'
-                }`}
+                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
               >
                 <TestTube className="w-4 h-4 mr-2" />
                 Test Payloads
@@ -729,10 +686,85 @@ export const RemediationPage = () => {
                       onVulnerabilitiesChange={setRemediationVulnerabilities}
                     />
                   ) : (
-                    <div className={`h-[500px] flex items-center justify-center ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
-                      Changes will appear here when you modify the code
+                    <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
+                      {!analysisResults.explanation && !isAnalyzing && (
+                        <div className="text-center py-12">
+                          <Brain className="w-12 h-12 mx-auto text-dark-400 mb-3 animate-pulse" />
+                          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Click "Run AI Security Analysis" in the top bar to generate code explanations, best practices, and performance metrics.
+                          </p>
+                          <button
+                            onClick={handleAnalyze}
+                            className="mt-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                          >
+                            Run AI Security Analysis
+                          </button>
+                        </div>
+                      )}
+
+                      {isAnalyzing && (
+                        <div className="flex flex-col items-center justify-center py-12">
+                          <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-3" />
+                          <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                            AI engine is analyzing your code structure...
+                          </p>
+                        </div>
+                      )}
+
+                      {analysisResults.explanation && !isAnalyzing && (
+                        <div className="space-y-6 text-left">
+                          {/* Code Explanation */}
+                          <div className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-blue-500 mb-2">AI Code Explanation</h3>
+                            <p className={`text-sm leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                              {analysisResults.explanation}
+                            </p>
+                          </div>
+
+                          {/* Best Practices */}
+                          <div className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-green-500 mb-2">Best Practice Recommendations</h3>
+                            {Array.isArray(analysisResults.bestPractices) && analysisResults.bestPractices.length > 0 ? (
+                              <div className="space-y-2 mt-2">
+                                {analysisResults.bestPractices.map((bp: any, idx: number) => (
+                                  <div key={idx} className="flex justify-between items-center text-sm border-b border-dark-700 pb-2 last:border-b-0 last:pb-0">
+                                    <div className={isDarkMode ? 'text-gray-300' : 'text-gray-800'}>
+                                      <span className="font-medium">{bp.type}</span>: <span className="opacity-80">{bp.description}</span>
+                                    </div>
+                                    <span className={`px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-900/40 text-blue-400`}>
+                                      Priority {bp.priority}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm opacity-80">All standard security configurations align with best practices.</p>
+                            )}
+                          </div>
+
+                          {/* Performance Metrics */}
+                          <div className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-purple-500 mb-2">Performance Optimization</h3>
+                            {Array.isArray(analysisResults.performance) && analysisResults.performance.length > 0 ? (
+                              <div className="space-y-2 mt-2">
+                                {analysisResults.performance.map((pm: any, idx: number) => (
+                                  <div key={idx} className="text-sm border-b border-dark-700 pb-2 last:border-b-0 last:pb-0">
+                                    <div className="flex justify-between font-medium">
+                                      <span className={isDarkMode ? 'text-gray-300' : 'text-gray-800'}>{pm.metric}</span>
+                                      <span className="text-purple-400">{pm.value}</span>
+                                    </div>
+                                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                      {pm.recommendation}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm opacity-80">Optimal performance metrics detected.</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

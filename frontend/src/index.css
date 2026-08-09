@@ -91,3 +91,94 @@
     @apply bg-dark-700;
   }
 }
+
+/* ==========================================================================
+   Light Mode Theme Overrides (Applied globally when body.light is active)
+   ========================================================================== */
+body.light {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+body.light .bg-dark-900 {
+  background-color: #f1f5f9 !important;
+}
+
+body.light .bg-dark-800,
+body.light header.bg-dark-800 {
+  background-color: #ffffff !important;
+}
+
+body.light .border-dark-700,
+body.light .border-dark-600 {
+  border-color: #e2e8f0 !important;
+}
+
+body.light .text-dark-100,
+body.light .text-white,
+body.light h1,
+body.light h2,
+body.light h3,
+body.light h4,
+body.light h5,
+body.light h6 {
+  color: #0f172a !important;
+}
+
+body.light .text-dark-300 {
+  color: #334155 !important;
+}
+
+body.light .text-dark-400 {
+  color: #64748b !important;
+}
+
+body.light .hover\:bg-dark-700:hover,
+body.light .hover\:text-white:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+body.light .card,
+body.light .bg-dark-800\/70,
+body.light div.card {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+body.light input,
+body.light textarea,
+body.light select,
+body.light .input {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+body.light input::placeholder,
+body.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+body.light .table th {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+body.light .table tr {
+  background-color: #ffffff !important;
+}
+
+body.light .table tr:hover {
+  background-color: #f1f5f9 !important;
+}
+
+body.light .table td {
+  color: #334155 !important;
+  border-color: #e2e8f0 !important;
+}
+
+body.light .divide-dark-700 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e2e8f0 !important;
+}

@@ -41,7 +41,18 @@ export const RemediationSandbox = ({ initialCode, onCodeChange, isDarkMode = tru
     }
   ]);
   const [showChat, setShowChat] = useState(false);
-  const [messages, setMessages] = useState<Array<{ user: string; text: string; timestamp: string }>>([]);
+  const [messages, setMessages] = useState<Array<{ user: string; text: string; timestamp: string }>>([
+    {
+      user: 'John Doe',
+      text: 'Hey! I noticed an innerHTML assignment in displayUserData. That could lead to XSS.',
+      timestamp: new Date(Date.now() - 600000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    },
+    {
+      user: 'Jane Smith',
+      text: 'Good catch. We should swap it to textContent or run sanitization.',
+      timestamp: new Date(Date.now() - 300000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+  ]);
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<Monaco | null>(null);
 
@@ -117,12 +128,30 @@ export const RemediationSandbox = ({ initialCode, onCodeChange, isDarkMode = tru
   };
 
   const sendMessage = (text: string) => {
+    if (!text.trim()) return;
     const newMessage = {
       user: 'You',
       text,
-      timestamp: new Date().toLocaleTimeString()
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     setMessages(prev => [...prev, newMessage]);
+    
+    // Simulate peer collaborator response after 1.2s
+    setTimeout(() => {
+      const replies = [
+        "Let's review the code changes together.",
+        "That implementation looks much safer now.",
+        "I'll verify this fix against our threat model.",
+        "Let's ensure the tests pass after this update."
+      ];
+      const randomReply = replies[Math.floor(Math.random() * replies.length)];
+      const responseMessage = {
+        user: Math.random() > 0.5 ? 'John Doe' : 'Jane Smith',
+        text: randomReply,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, responseMessage]);
+    }, 1200);
   };
 
   const scanCode = async (codeToScan: string) => {

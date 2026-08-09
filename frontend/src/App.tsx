@@ -18,6 +18,15 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
 }
 
 function App() {
+  React.useEffect(() => {
+    const saved = localStorage.getItem('theme') || 'dark';
+    if (saved === 'light') {
+      document.body.classList.add('light');
+    } else {
+      document.body.classList.remove('light');
+    }
+  }, []);
+
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="min-h-screen bg-dark-900 flex flex-col">

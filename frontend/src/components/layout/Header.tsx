@@ -12,7 +12,9 @@ import {
   ChevronDown,
   LogOut,
   Bell,
-  Code
+  Code,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { currentUser } from '../../data/mockData';
@@ -21,10 +23,29 @@ import { authApi } from '../../services/apiClient';
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('theme') || 'dark';
+    if (saved === 'light') {
+      document.body.classList.add('light');
+    } else {
+      document.body.classList.remove('light');
+    }
+    return saved;
+  });
   const navigate = useNavigate();
   
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const toggleProfileDropdown = () => setIsProfileDropdownOpen(!isProfileDropdownOpen);
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('theme', nextTheme);
+    if (nextTheme === 'light') {
+      document.body.classList.add('light');
+    } else {
+      document.body.classList.remove('light');
+    }
+  };
 
   const handleLogout = async () => {
     await authApi.logout();
@@ -68,6 +89,15 @@ export function Header() {
 
           {/* Right Section - Notifications & Profile */}
           <div className="flex items-center">
+            {/* Theme Toggle */}
+            <button 
+              onClick={toggleTheme}
+              className="p-2 text-dark-300 hover:text-white hover:bg-dark-700 rounded-full mr-2"
+              title="Toggle Theme"
+            >
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+
             {/* Notifications */}
             <button className="p-2 text-dark-300 hover:text-white hover:bg-dark-700 rounded-full relative">
               <Bell size={20} />

@@ -57,55 +57,7 @@ What would you like me to help you with?`,
     scrollToBottom();
   }, [messages]);
 
-  const analyzeCode = (code: string): Vulnerability[] => {
-    const vulns: Vulnerability[] = [];
-    
-    // Check for XSS vulnerabilities
-    if (code.includes('innerHTML') || code.includes('document.write')) {
-      vulns.push({
-        type: 'XSS',
-        severity: 'high',
-        description: 'Potential Cross-Site Scripting vulnerability detected. Avoid using innerHTML or document.write with user input.',
-        location: 'Found in code using innerHTML or document.write',
-        fix: 'Use textContent or createTextNode instead of innerHTML. For HTML content, use DOMPurify to sanitize input.'
-      });
-    }
 
-    // Check for SQL Injection
-    if (code.includes('SELECT') && code.includes('+') && code.includes('query')) {
-      vulns.push({
-        type: 'SQL Injection',
-        severity: 'high',
-        description: 'Potential SQL Injection vulnerability detected. String concatenation in SQL queries is dangerous.',
-        location: 'Found in SQL query construction',
-        fix: 'Use parameterized queries or prepared statements instead of string concatenation.'
-      });
-    }
-
-    // Check for Command Injection
-    if (code.includes('eval(') || code.includes('exec(')) {
-      vulns.push({
-        type: 'Command Injection',
-        severity: 'high',
-        description: 'Potential Command Injection vulnerability detected. Avoid using eval() or exec() with user input.',
-        location: 'Found in code using eval() or exec()',
-        fix: 'Use safer alternatives to eval() and exec(). If necessary, implement strict input validation.'
-      });
-    }
-
-    // Check for Missing Input Validation
-    if (code.includes('function') && !code.includes('validate') && !code.includes('sanitize')) {
-      vulns.push({
-        type: 'Input Validation',
-        severity: 'medium',
-        description: 'Missing input validation detected. User input should be validated before processing.',
-        location: 'Found in function parameters',
-        fix: 'Implement input validation using a validation library or custom validation functions.'
-      });
-    }
-
-    return vulns;
-  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -124,11 +76,25 @@ What would you like me to help you with?`,
 
     try {
       let response = '';
-      const detectedVulns = currentCode ? analyzeCode(currentCode) : [];
+      let detectedVulns: Vulnerability[] = [];
 
       if (currentCode) {
-        // Get AI analysis
-        response = await analyzeCodeWithAI(currentCode, input);
+        // Run client-side AST scanner
+        const [rawScanner, { scanCodeForVulnerabilities, processWasmResults }] = await Promise.all([
+          analyzeCodeWithAI(currentCode, input),
+          import('../services/wasmService')
+        ]);
+        response = rawScanner;
+        
+        const rawResults = await scanCodeForVulnerabilities(currentCode);
+        const processed = processWasmResults(currentCode, rawResults);
+        detectedVulns = processed.map(p => ({
+          type: p.type,
+          severity: p.severity,
+          description: p.description,
+          location: `Line ${p.line}`,
+          fix: 'Apply code refactoring standard'
+        }));
         setVulnerabilities(detectedVulns);
       } else {
         response = "Please provide some code for me to analyze. You can paste your code in the editor above.";
