@@ -308,14 +308,35 @@ export const RemediationPage = () => {
     setShowHistoryModal(false);
   };
 
-  // Initialize attack path visualization
+  // Dynamically compute attack path nodes and edges whenever vulnerabilities change
+  useEffect(() => {
+    const nodes: any[] = [{ id: 'Entry: User Input', type: 'entry', label: 'User Input' }];
+    const links: any[] = [];
+
+    if (remediationVulnerabilities.length === 0) {
+      nodes.push({ id: 'Secured Code Sink', type: 'safe', label: 'Safe Execution' });
+      links.push({ source: 'Entry: User Input', target: 'Secured Code Sink' });
+    } else {
+      remediationVulnerabilities.forEach((v, idx) => {
+        const vulnNodeId = `Vuln: ${v.type.toUpperCase()} (Line ${v.line})`;
+        const targetNodeId = `Impact: ${v.type === 'xss' ? 'DOM Hijack' : v.type === 'sql_injection' ? 'DB Data Leakage' : v.type === 'hardcoded_key' ? 'API Key Exfiltration' : 'Remote Execution'}`;
+
+        nodes.push({ id: vulnNodeId, type: 'vuln', label: v.description });
+        nodes.push({ id: targetNodeId, type: 'impact', label: targetNodeId });
+
+        links.push({ source: 'Entry: User Input', target: vulnNodeId });
+        links.push({ source: vulnNodeId, target: targetNodeId });
+      });
+      setAttackPathData(nodes);
+    }
+  }, [remediationVulnerabilities]);
+
+  // D3 Attack Path Visualization
   useEffect(() => {
     if (showAttackPath) {
       const svg = d3.select('#attack-path-svg');
-      // Clear previous visualization
       svg.selectAll('*').remove();
 
-      // Create attack path visualization
       const width = 800;
       const height = 400;
       const simulation = d3.forceSimulation<DragSubject>(attackPathData)
@@ -375,77 +396,96 @@ export const RemediationPage = () => {
     }
   }, [showAttackPath, attackPathData]);
 
-  // AI Explainer integration
-  const generateAIExplanation = async (code: string) => {
+  // Real AI Explainer integration using our FastAPI backend via aiService
+  const generateAIExplanation = async (codeToExplain: string) => {
+    setIsAnalyzing(true);
     try {
-      // TODO: Replace with actual Hugging Face API call
-      const response = await fetch('https://api-inference.huggingface.co/models/gpt2', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.REACT_APP_HUGGINGFACE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ inputs: code }),
-      });
-      const data = await response.json();
-      setAIExplanation(data[0].generated_text);
+      const explanation = await getCodeExplanation(codeToExplain);
+      setAIExplanation(explanation);
     } catch (error) {
       console.error('Error generating AI explanation:', error);
-      setAIExplanation('Failed to generate explanation. Please try again.');
+      setAIExplanation('Failed to connect to AI explanation endpoint. Ensure backend is running.');
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
-  // Custom payload testing
-  const testCustomPayload = async (payload: string) => {
-    try {
-      // TODO: Implement actual payload testing
-      const result = await fetch('/api/test-payload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ payload }),
-      });
-      return await result.json();
-    } catch (error) {
-      console.error('Error testing payload:', error);
-      return { error: 'Failed to test payload' };
-    }
-  };
-
+  // Interactive Payload Testing Sandbox Simulator against active code
   const testPayload = async () => {
-    if (!customPayload) return;
+    if (!customPayload || !customPayload.trim()) return;
     
     setIsTesting(true);
     try {
-      // Simulate payload testing
+      const p = customPayload.trim();
+      const codeUpper = code.toUpperCase();
+      const isXSSPayload = /<script|javascript:|onerror=|onload=|innerHTML/i.test(p);
+      const isSQLiPayload = /'|\bOR\b|\bAND\b|--|UNION|SELECT|DROP/i.test(p);
+      const isCmdPayload = /;|\||`|\$|eval|exec|system|import os/i.test(p);
+      const isPromptPayload = /ignore|previous|instructions|system prompt|api_key|sk-/i.test(p);
+
+      const findings: any[] = [];
+      const recommendations: string[] = [];
+
+      // Check against actual editor code
+      if (isXSSPayload && code.includes('innerHTML') && !code.includes('DOMPurify')) {
+        findings.push({
+          type: 'XSS (Cross-Site Scripting)',
+          severity: 'high',
+          description: `Payload "${p}" executed via un-sanitized DOM write (innerHTML).`,
+          status: 'VULNERABLE SINK EXPOSED'
+        });
+        recommendations.push('Replace innerHTML with textContent or use DOMPurify.sanitize()');
+      }
+
+      if (isSQLiPayload && (codeUpper.includes('SELECT') || codeUpper.includes('INSERT') || codeUpper.includes('WHERE')) && code.includes('+')) {
+        findings.push({
+          type: 'SQL Injection',
+          severity: 'high',
+          description: `Payload "${p}" broke out of query structure via string concatenation.`,
+          status: 'UNPARAMETERIZED QUERY EXPOSED'
+        });
+        recommendations.push('Use parameterized prepared statements (e.g., db.execute(sql, [params]))');
+      }
+
+      if (isCmdPayload && (code.includes('eval') || code.includes('exec') || code.includes('system'))) {
+        findings.push({
+          type: 'Command / Code Injection',
+          severity: 'critical',
+          description: `Payload "${p}" passed to dynamic execution function (eval/exec/system).`,
+          status: 'DYNAMIC CODE EXECUTION EXPOSED'
+        });
+        recommendations.push('Avoid eval()/exec() and use whitelist-validated input handlers');
+      }
+
+      if (isPromptPayload && (code.includes('openai.api_key') || code.includes('prompt = f') || code.includes('sk-proj-'))) {
+        findings.push({
+          type: 'Prompt Injection / Credential Leakage',
+          severity: 'high',
+          description: `Payload "${p}" can override system prompt context or exfiltrate exposed API keys.`,
+          status: 'UNVALIDATED PROMPT CONTEXT EXPOSED'
+        });
+        recommendations.push('Store API keys in environment variables and sanitize prompt inputs');
+      }
+
+      const isVulnerable = findings.length > 0;
+
       const results = {
-        status: 'success',
-        vulnerabilities: [
-          {
-            type: 'xss',
-            severity: 'high',
-            description: 'XSS payload detected',
-            location: 'Line 3'
-          },
-          {
-            type: 'sql_injection',
-            severity: 'medium',
-            description: 'SQL injection attempt detected',
-            location: 'Line 7'
-          }
-        ],
-        recommendations: [
-          'Use parameterized queries',
-          'Implement input validation',
-          'Add output encoding'
-        ]
+        status: isVulnerable ? 'vulnerable' : 'mitigated',
+        payloadTested: p,
+        timestamp: new Date().toLocaleTimeString(),
+        vulnerabilities: isVulnerable ? findings : [{
+          type: 'Safe Input Handling',
+          severity: 'info',
+          description: `Payload "${p}" was tested against active code. No vulnerable execution sinks were triggered.`,
+          status: 'PAYLOAD NEUTRALIZED'
+        }],
+        recommendations: isVulnerable ? recommendations : ['Current code structure neutralizes this payload class. Maintain strict input validation.']
       };
-      
+
       setTestResults(results);
     } catch (error) {
       console.error('Error testing payload:', error);
-      setTestResults({ status: 'error', message: 'Failed to test payload' });
+      setTestResults({ status: 'error', message: 'Failed to complete payload simulation.' });
     } finally {
       setIsTesting(false);
     }
@@ -453,14 +493,17 @@ export const RemediationPage = () => {
 
   const generateAISuggestions = async () => {
     try {
-      // Simulate AI suggestions
-      const suggestions = [
-        'Consider using DOMPurify for XSS prevention',
-        'Implement input validation for SQL queries',
-        'Use parameterized queries instead of string concatenation',
-        'Add proper error handling for command execution'
-      ];
-      setAISuggestions(suggestions);
+      const bestPractices = await getBestPractices(code);
+      if (Array.isArray(bestPractices) && bestPractices.length > 0) {
+        setAISuggestions(bestPractices.map((b: any) => `${b.type}: ${b.description} (${b.impact} impact)`));
+      } else {
+        setAISuggestions([
+          'Input Sanitization: Use DOMPurify for XSS mitigation',
+          'SQL Protection: Enforce parameterized queries for all DB calls',
+          'Credential Security: Move API keys out of source code into environment variables',
+          'Prompt Guard: Validate user inputs before formatting into LLM prompts'
+        ]);
+      }
     } catch (error) {
       console.error('Error generating AI suggestions:', error);
     }

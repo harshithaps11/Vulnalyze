@@ -142,34 +142,53 @@ export const RemediationSandbox = ({ initialCode, onCodeChange, isDarkMode = tru
   const applyQuickFix = (vulnerability: Vulnerability) => {
     let fixedCode = code;
     const lines = code.split('\n');
+    const lineIdx = vulnerability.line - 1;
+    if (lineIdx < 0 || lineIdx >= lines.length) return;
+
+    const targetLineText = lines[lineIdx];
 
     switch (vulnerability.type) {
       case 'xss':
-        // Replace innerHTML with textContent
-        const xssLine = lines[vulnerability.line - 1];
-        if (xssLine.includes('innerHTML')) {
-          lines[vulnerability.line - 1] = xssLine.replace('innerHTML', 'textContent');
+        if (targetLineText.includes('innerHTML')) {
+          lines[lineIdx] = targetLineText.replace('innerHTML', 'textContent');
         }
         break;
       case 'sql_injection':
-        // Replace string concatenation with parameterized query
-        const sqlLine = lines[vulnerability.line - 1];
-        if (sqlLine.includes("'")) {
-          lines[vulnerability.line - 1] = sqlLine.replace(/'/g, '?');
+        if (targetLineText.includes('+')) {
+          lines[lineIdx] = targetLineText.replace(/['"]\s*\+\s*(\w+)\s*\+\s*['"]/g, '?').replace(/['"]\s*\+\s*(\w+)/g, '?');
         }
         break;
       case 'command_injection':
-        // Sanitize command input
-        const cmdLine = lines[vulnerability.line - 1];
-        if (cmdLine.includes('eval')) {
-          lines[vulnerability.line - 1] = cmdLine.replace('eval', 'safeEval');
+        if (targetLineText.includes('eval')) {
+          lines[lineIdx] = targetLineText.replace('eval', 'safeEval');
+        } else if (targetLineText.includes('exec')) {
+          lines[lineIdx] = targetLineText.replace('exec', 'safeExec');
+        } else if (targetLineText.includes('system')) {
+          lines[lineIdx] = targetLineText.replace('system', 'safeSystem');
         }
+        break;
+      case 'hardcoded_key':
+        if (targetLineText.includes('openai.api_key')) {
+          lines[lineIdx] = 'openai.api_key = os.getenv("OPENAI_API_KEY")';
+        } else {
+          lines[lineIdx] = targetLineText.replace(/['"]sk-[A-Za-z0-9_-]+['"]/g, 'process.env.API_KEY');
+        }
+        break;
+      case 'prompt_injection':
+        lines[lineIdx] = targetLineText.replace(/\{user_message\}/g, '{sanitize_input(user_message)}');
+        break;
+      case 'weak_hash':
+        lines[lineIdx] = targetLineText.replace(/md5\((.*?)\)/g, 'crypto.subtle.digest("SHA-256", $1)').replace(/sha1\((.*?)\)/g, 'crypto.subtle.digest("SHA-256", $1)');
+        break;
+      case 'ssl_bypass':
+        lines[lineIdx] = targetLineText.replace('rejectUnauthorized: false', 'rejectUnauthorized: true').replace('verify=False', 'verify=True');
         break;
     }
 
     fixedCode = lines.join('\n');
     setCode(fixedCode);
     onCodeChange(fixedCode);
+    scanCode(fixedCode);
   };
 
   return (
