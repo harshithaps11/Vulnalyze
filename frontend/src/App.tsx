@@ -13,6 +13,8 @@ import { Settings } from './pages/Settings';
 import { Login } from './pages/Login';
 import { authApi } from './services/apiClient';
 
+import { Footer } from './components/layout/Footer';
+
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
   return authApi.isAuthenticated() ? children : <Navigate to="/login" replace />;
 }
@@ -48,6 +50,7 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
+        {authApi.isAuthenticated() ? <Footer /> : null}
       </div>
     </BrowserRouter>
   );
