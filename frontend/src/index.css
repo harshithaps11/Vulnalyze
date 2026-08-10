@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-dark-900 text-dark-100 font-sans;
+    @apply bg-dark-900 text-dark-100 font-sans antialiased;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -14,19 +14,19 @@
 
 @layer components {
   .card {
-    @apply bg-dark-800 border border-dark-700 rounded-lg p-4 shadow-lg;
+    @apply bg-dark-800 border border-dark-700 rounded-xl p-5 shadow-md transition-all duration-200;
   }
   
   .btn {
-    @apply px-4 py-2 rounded-md font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-900;
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-900 active:scale-[0.98];
   }
   
   .btn-primary {
-    @apply btn bg-primary-600 hover:bg-primary-700 text-white focus:ring-primary-500;
+    @apply btn bg-primary-600 hover:bg-primary-700 text-white focus:ring-primary-500 shadow-sm;
   }
   
   .btn-secondary {
-    @apply btn bg-dark-700 hover:bg-dark-600 text-white focus:ring-dark-500;
+    @apply btn bg-dark-700 hover:bg-dark-600 text-dark-100 border border-dark-600/60 focus:ring-dark-500;
   }
   
   .btn-danger {
@@ -34,95 +34,144 @@
   }
   
   .btn-success {
-    @apply btn bg-severity-low hover:bg-green-700 text-white focus:ring-green-500;
+    @apply btn bg-severity-low hover:bg-emerald-700 text-white focus:ring-emerald-500;
   }
   
   .input {
-    @apply bg-dark-700 border border-dark-600 rounded-md px-3 py-2 text-dark-100 
+    @apply bg-dark-700/80 border border-dark-600 rounded-lg px-3.5 py-2 text-dark-100 
            focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-           placeholder:text-dark-400 w-full;
+           placeholder:text-dark-400 w-full transition-all text-sm;
   }
   
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide;
   }
   
   .badge-critical {
-    @apply badge bg-severity-critical/10 text-severity-critical;
+    @apply badge bg-severity-critical/15 text-severity-critical border border-severity-critical/30;
   }
   
   .badge-high {
-    @apply badge bg-severity-high/10 text-severity-high;
+    @apply badge bg-severity-high/15 text-severity-high border border-severity-high/30;
   }
   
   .badge-medium {
-    @apply badge bg-severity-medium/10 text-severity-medium;
+    @apply badge bg-severity-medium/15 text-severity-medium border border-severity-medium/30;
   }
   
   .badge-low {
-    @apply badge bg-severity-low/10 text-severity-low;
+    @apply badge bg-severity-low/15 text-severity-low border border-severity-low/30;
   }
 
   .badge-info {
-    @apply badge bg-severity-info/10 text-severity-info;
+    @apply badge bg-severity-info/15 text-severity-info border border-severity-info/30;
   }
   
   .table-container {
-    @apply overflow-x-auto rounded-lg border border-dark-700;
+    @apply overflow-x-auto rounded-xl border border-dark-700 bg-dark-800/40 shadow-sm;
   }
   
   .table {
-    @apply min-w-full divide-y divide-dark-700;
+    @apply min-w-full divide-y divide-dark-700/80;
   }
   
   .table th {
-    @apply px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider bg-dark-800;
+    @apply px-6 py-3.5 text-left text-xs font-semibold text-dark-300 uppercase tracking-wider bg-dark-800/90;
   }
   
   .table td {
-    @apply px-6 py-4 whitespace-nowrap text-sm;
+    @apply px-6 py-4 whitespace-nowrap text-sm text-dark-200;
   }
   
   .table tr {
-    @apply bg-dark-800;
+    @apply bg-dark-800/60 transition-colors;
   }
   
   .table tr:hover {
-    @apply bg-dark-700;
+    @apply bg-dark-700/60;
   }
 }
 
+/* Custom sleek scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
 /* ==========================================================================
-   Light Mode Theme Overrides (Applied globally when body.light is active)
+   Premium Light Mode Theme Styles (Applied when body.light is active)
    ========================================================================== */
 body.light {
   background-color: #f8fafc !important;
   color: #0f172a !important;
 }
 
-body.light .bg-dark-900 {
-  background-color: #f1f5f9 !important;
+body.light main {
+  background-color: #f8fafc !important;
 }
 
-body.light .bg-dark-800,
-body.light header.bg-dark-800 {
+body.light header {
   background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+body.light header .text-white,
+body.light header span.text-white {
+  color: #0f172a !important;
+}
+
+body.light header .text-dark-300 {
+  color: #475569 !important;
+}
+
+body.light header .hover\:bg-dark-700:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+body.light .card,
+body.light div.card,
+body.light .bg-dark-800,
+body.light .bg-dark-800\/70,
+body.light .bg-dark-800\/50,
+body.light .bg-dark-800\/40,
+body.light .bg-dark-800\/90 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
 }
 
 body.light .border-dark-700,
-body.light .border-dark-600 {
+body.light .border-dark-600,
+body.light .border-dark-700\/50,
+body.light .border-dark-700\/80 {
   border-color: #e2e8f0 !important;
 }
 
-body.light .text-dark-100,
-body.light .text-white,
 body.light h1,
 body.light h2,
 body.light h3,
 body.light h4,
 body.light h5,
-body.light h6 {
+body.light h6,
+body.light .text-white,
+body.light .text-dark-100 {
   color: #0f172a !important;
+}
+
+body.light .text-dark-200 {
+  color: #1e293b !important;
 }
 
 body.light .text-dark-300 {
@@ -133,17 +182,17 @@ body.light .text-dark-400 {
   color: #64748b !important;
 }
 
-body.light .hover\:bg-dark-700:hover,
-body.light .hover\:text-white:hover {
+body.light .bg-dark-700,
+body.light .bg-dark-700\/50,
+body.light .bg-dark-700\/60,
+body.light .bg-dark-700\/80 {
   background-color: #f1f5f9 !important;
-  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
 }
 
-body.light .card,
-body.light .bg-dark-800\/70,
-body.light div.card {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
+body.light .hover\:bg-dark-700:hover,
+body.light .hover\:bg-dark-700\/50:hover {
+  background-color: #e2e8f0 !important;
 }
 
 body.light input,
@@ -158,6 +207,22 @@ body.light .input {
 body.light input::placeholder,
 body.light textarea::placeholder {
   color: #94a3b8 !important;
+}
+
+body.light .btn-secondary {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+body.light .btn-secondary:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+body.light .table-container {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
 }
 
 body.light .table th {
@@ -179,6 +244,17 @@ body.light .table td {
   border-color: #e2e8f0 !important;
 }
 
-body.light .divide-dark-700 > :not([hidden]) ~ :not([hidden]) {
-  border-color: #e2e8f0 !important;
-}
+/* Maintain crisp dark code snippets in light mode for readability */
+body.light .bg-dark-900,
+body.light .bg-dark-950 {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+body.light .bg-dark-900 pre,
+body.light .bg-dark-950 pre,
+body.light .bg-dark-900 code,
+body.light .bg-dark-950 code {
+  color: #f1f5f9 !important;
+}

@@ -10,21 +10,14 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 interface MetricItemProps {
   label: string;
   value: number;
-  trend?: 'up' | 'down';
-  trendValue?: string;
 }
 
-function MetricItem({ label, value, trend, trendValue }: MetricItemProps) {
+function MetricItem({ label, value }: MetricItemProps) {
   return (
-    <div>
-      <p className="text-sm text-dark-400">{label}</p>
+    <div className="bg-dark-700/30 p-2.5 rounded-lg border border-dark-700/50">
+      <p className="text-xs text-dark-400 font-medium">{label}</p>
       <div className="flex items-end mt-1">
-        <span className="text-2xl font-semibold text-white">{value}</span>
-        {trend && trendValue && (
-          <span className={`ml-2 text-xs font-medium ${trend === 'up' ? 'text-severity-critical' : 'text-severity-low'}`}>
-            {trend === 'up' ? '↑' : '↓'} {trendValue}
-          </span>
-        )}
+        <span className="text-xl font-bold text-dark-100">{value}</span>
       </div>
     </div>
   );
@@ -47,7 +40,6 @@ export function DashboardMetricsCard() {
         const response = await apiClient.get('/scans');
         const scans = response.data || [];
 
-        // Compute real totals from all scan vulnerabilities
         const counts = { total: 0, critical: 0, high: 0, medium: 0, low: 0, info: 0 };
         for (const scan of scans) {
           for (const vuln of scan.vulnerabilities || []) {
@@ -71,91 +63,79 @@ export function DashboardMetricsCard() {
     fetchMetrics();
   }, []);
 
-  // Build chart data from real metrics
   const severityDistributionData = {
     labels: ['Critical', 'High', 'Medium', 'Low', 'Info'],
     datasets: [
       {
         label: 'Vulnerabilities',
         data: [metrics.critical, metrics.high, metrics.medium, metrics.low, metrics.info],
-        backgroundColor: [
-          '#DC2626', // Critical - Red
-          '#EA580C', // High - Orange
-          '#F59E0B', // Medium - Amber
-          '#10B981', // Low - Green
-          '#3B82F6', // Info - Blue
-        ],
+        backgroundColor: ['#DC2626', '#EA580C', '#F59E0B', '#10B981', '#3B82F6'],
         borderWidth: 0,
       },
     ],
   };
 
-  // Chart.js options
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'right' as const,
         labels: {
-          color: '#cbd5e1', // text-dark-300
-          font: {
-            size: 12,
-          },
-          padding: 20,
+          color: '#94a3b8',
+          font: { size: 11 },
+          padding: 12,
         },
       },
       tooltip: {
-        backgroundColor: '#1e293b', // bg-dark-800
-        titleColor: '#f1f5f9', // text-dark-100
-        bodyColor: '#f1f5f9', // text-dark-100
-        borderColor: '#334155', // border-dark-700
+        backgroundColor: '#1e293b',
+        titleColor: '#f1f5f9',
+        bodyColor: '#f1f5f9',
+        borderColor: '#334155',
         borderWidth: 1,
       },
     },
-    cutout: '70%',
+    cutout: '68%',
   };
 
   if (loading) {
     return (
       <Card className="h-full">
-        <div className="flex flex-col h-full animate-pulse">
-          <div className="h-5 bg-dark-700 rounded w-48 mb-4" />
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i}>
-                <div className="h-3 bg-dark-700 rounded w-24 mb-2" />
-                <div className="h-7 bg-dark-700 rounded w-12" />
-              </div>
+        <div className="flex flex-col h-full animate-pulse space-y-4">
+          <div className="h-5 bg-dark-700 rounded w-40" />
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-12 bg-dark-700/60 rounded-lg" />
             ))}
           </div>
-          <div className="flex-grow flex items-center justify-center">
-            <div className="h-56 w-56 bg-dark-700 rounded-full" />
-          </div>
+          <div className="h-44 w-full bg-dark-700/40 rounded-full" />
         </div>
       </Card>
     );
   }
 
   return (
-    <Card className="h-full">
+    <Card className="h-full flex flex-col">
       <div className="flex flex-col h-full">
-        <h3 className="text-lg font-semibold text-white mb-4">Vulnerability Metrics</h3>
+        <h3 className="text-lg font-semibold text-dark-100 mb-3">Vulnerability Metrics</h3>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <MetricItem label="Total Vulnerabilities" value={metrics.total} />
+        <div className="grid grid-cols-2 gap-2.5 mb-3">
+          <MetricItem label="Total Vulns" value={metrics.total} />
           <MetricItem label="Critical" value={metrics.critical} />
           <MetricItem label="High" value={metrics.high} />
           <MetricItem label="Medium" value={metrics.medium} />
         </div>
 
-        <div className="flex-grow mt-2">
-          <div className="h-56 flex items-center justify-center">
-            {metrics.total > 0 ? (
+        <div className="flex-grow min-h-[180px] flex items-center justify-center">
+          {metrics.total > 0 ? (
+            <div className="h-44 w-full">
               <Doughnut data={severityDistributionData} options={chartOptions} />
-            ) : (
-              <p className="text-dark-400 text-sm">No vulnerability data yet. Run a scan to see metrics.</p>
-            )}
-          </div>
+            </div>
+          ) : (
+            <p className="text-dark-400 text-xs text-center py-6">
+              No vulnerability data yet. Run a scan to see metrics.
+            </p>
+          )}
         </div>
       </div>
     </Card>
