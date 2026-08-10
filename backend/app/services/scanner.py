@@ -385,8 +385,9 @@ class ScannerService:
         Checks for missing/weak security headers per OWASP Security Headers Project.
         """
         vulnerabilities = []
+        headers_to_send = {"User-Agent": "Vulnalyze-Security-Scanner/1.0 (Mozilla/5.0; Windows NT 10.0; Win64; x64)"}
         try:
-            async with httpx.AsyncClient(timeout=15, follow_redirects=True, verify=False) as client:
+            async with httpx.AsyncClient(timeout=15, follow_redirects=True, verify=False, headers=headers_to_send) as client:
                 try:
                     response = await client.get(url)
                 except Exception as e:
@@ -603,7 +604,10 @@ if celery_app is not None:
 async def run_scan_task_in_background(scan_uuid: str, code: str, url: str):
     """Async background task to run the hybrid scan and save results to SQLite/Postgres DB."""
     from app.db.session import AsyncSessionLocal
-    from app.models.models import Scan, Vulnerability, ScanStatus
+    from app.models.models import Scan, Vulnerability, ScanStatus, VulnerabilitySeverity, FindingStatus
+    from app.services.ssrf_protection import validate_scan_target
+    from app.services.iac_scanner import IaCScanner
+    from app.services.risk_engine import calculate_risk_score
     from sqlalchemy import select
     from uuid import UUID
 
@@ -619,22 +623,56 @@ async def run_scan_task_in_background(scan_uuid: str, code: str, url: str):
         db_scan.status = ScanStatus.RUNNING
         await db.commit()
 
-    # 2. Run the scanners
+    # 2. SSRF Target Validation
+    if url and url not in ("", "http://", "https://"):
+        is_safe, reason = validate_scan_target(url)
+        if not is_safe:
+            print(f"SSRF Protection blocked URL target: {url} ({reason})")
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(Scan).where(Scan.uuid == UUID(scan_uuid)))
+                db_scan = result.scalar_one_or_none()
+                if db_scan:
+                    db_vuln = Vulnerability(
+                        scan_id=db_scan.id,
+                        title="SSRF Protection — Target Blocked",
+                        description=f"Target URL {url} was blocked by Server-Side Request Forgery protection: {reason}",
+                        severity=VulnerabilitySeverity.HIGH,
+                        location=url,
+                        evidence=reason,
+                        cwe_id="918",
+                        owasp_category="A10:2021-Server-Side Request Forgery",
+                        scanner_name="ssrf-protection",
+                        finding_status=FindingStatus.OPEN,
+                        vuln_metadata={"blocked_reason": reason}
+                    )
+                    db.add(db_vuln)
+                    db_scan.status = ScanStatus.COMPLETED
+                    db_scan.results = {"vulnerabilities_count": 1, "ssrf_blocked": True}
+                    await db.commit()
+            return
+
+    # 3. Run all scanner engines
     scanner = ScannerService()
     static_results = []
     dynamic_results = []
+    iac_results = []
 
     if code:
+        # Run static Semgrep / Rule scanner
         static_results = await scanner.run_semgrep(code)
+        # Run IaC pattern scanner
+        iac_scanner = IaCScanner()
+        iac_results = await iac_scanner.scan_content(code, "source_code.py")
+
     if url and url not in ("", "http://", "https://"):
         dynamic_results = await scanner.run_zap(url)
 
-    all_results = static_results + dynamic_results
+    all_results = static_results + iac_results + dynamic_results
 
-    # 3. Cache results (if Redis exists)
+    # 4. Cache results (if Redis exists)
     await scanner.cache_results(f"scan:{scan_uuid}", all_results)
 
-    # 4. Save results to DB and update Scan Status
+    # 5. Save results to DB with extended fields and update Scan Status
     async with AsyncSessionLocal() as db:
         result = await db.execute(select(Scan).where(Scan.uuid == UUID(scan_uuid)))
         db_scan = result.scalar_one_or_none()
@@ -643,23 +681,42 @@ async def run_scan_task_in_background(scan_uuid: str, code: str, url: str):
             return
 
         for res in all_results:
-            # Clamp evidence to 500 chars so it fits TEXT columns
             evidence = res.get('evidence') or ''
             if isinstance(evidence, str):
                 evidence = evidence[:500]
 
+            meta = res.get('metadata', {})
+            sev_raw = res.get('severity', VulnerabilitySeverity.LOW)
+            if isinstance(sev_raw, str):
+                try:
+                    sev = VulnerabilitySeverity(sev_raw.lower())
+                except ValueError:
+                    sev = VulnerabilitySeverity.LOW
+            else:
+                sev = sev_raw
+
             db_vuln = Vulnerability(
                 scan_id=db_scan.id,
-                title=res['title'][:255],
-                description=res['description'],
-                severity=res['severity'],
-                location=res['location'][:255],
+                title=str(res['title'])[:255],
+                description=str(res['description']),
+                severity=sev,
+                location=str(res['location'])[:255],
                 evidence=evidence,
-                vuln_metadata=res.get('metadata', {})
+                rule_id=meta.get('rule_id', ''),
+                cwe_id=str(meta.get('cweid', '')),
+                owasp_category=meta.get('owasp', ''),
+                confidence=meta.get('confidence', 'medium'),
+                scanner_name=meta.get('scanner', 'vulnalyze-engine'),
+                finding_status=FindingStatus.OPEN,
+                vuln_metadata=meta
             )
             db.add(db_vuln)
 
+        risk_score = calculate_risk_score(all_results)
         db_scan.status = ScanStatus.COMPLETED
-        db_scan.results = {"vulnerabilities_count": len(all_results)}
+        db_scan.results = {
+            "vulnerabilities_count": len(all_results),
+            "risk_score": risk_score
+        }
         await db.commit()
-        print(f"Scan {scan_uuid} completed — {len(all_results)} vulnerabilities saved.")
+        print(f"Scan {scan_uuid} completed — {len(all_results)} vulnerabilities saved (Risk Score: {risk_score}/10).")
