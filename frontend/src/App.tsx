@@ -12,7 +12,6 @@ import { Profile } from './pages/Profile';
 import { Settings } from './pages/Settings';
 import { Login } from './pages/Login';
 import { authApi } from './services/apiClient';
-
 import { Footer } from './components/layout/Footer';
 
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
@@ -21,12 +20,8 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
 
 function App() {
   React.useEffect(() => {
-    const saved = localStorage.getItem('theme') || 'dark';
-    if (saved === 'light') {
-      document.body.classList.add('light');
-    } else {
-      document.body.classList.remove('light');
-    }
+    localStorage.removeItem('theme');
+    document.body.classList.remove('light');
   }, []);
 
   return (
