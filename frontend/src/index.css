@@ -94,14 +94,14 @@
 
 /* Custom sleek scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.4);
+  background: rgba(148, 163, 184, 0.4);
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -109,7 +109,7 @@
 }
 
 /* ==========================================================================
-   Premium Light Mode Theme Styles (Applied when body.light is active)
+   Comprehensive Light Mode Styling System
    ========================================================================== */
 body.light {
   background-color: #f8fafc !important;
@@ -120,45 +120,64 @@ body.light main {
   background-color: #f8fafc !important;
 }
 
+/* Light Mode Navigation Bar */
 body.light header {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
 body.light header .text-white,
-body.light header span.text-white {
+body.light header span.text-white,
+body.light header a {
   color: #0f172a !important;
 }
 
 body.light header .text-dark-300 {
-  color: #475569 !important;
+  color: #334155 !important;
 }
 
 body.light header .hover\:bg-dark-700:hover {
   background-color: #f1f5f9 !important;
-  color: #0f172a !important;
+  color: #2563eb !important;
 }
 
+/* Welcome Banner in Light Mode */
+body.light .welcome-banner {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+  border-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+body.light .welcome-banner h2,
+body.light .welcome-banner p,
+body.light .welcome-banner svg {
+  color: #ffffff !important;
+}
+
+/* Cards & Panels in Light Mode */
 body.light .card,
 body.light div.card,
-body.light .bg-dark-800,
-body.light .bg-dark-800\/70,
-body.light .bg-dark-800\/50,
-body.light .bg-dark-800\/40,
-body.light .bg-dark-800\/90 {
+body.light [class*="bg-dark-800"] {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04) !important;
 }
 
-body.light .border-dark-700,
-body.light .border-dark-600,
-body.light .border-dark-700\/50,
-body.light .border-dark-700\/80 {
+/* Sub-items / Lists / Metric cards inside Cards */
+body.light [class*="bg-dark-700"],
+body.light [class*="bg-dark-900"] {
+  background-color: #f8fafc !important;
   border-color: #e2e8f0 !important;
 }
 
+body.light .hover\:bg-dark-700\/80:hover,
+body.light .hover\:bg-dark-700\/50:hover,
+body.light .hover\:bg-dark-700:hover {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+
+/* High Contrast Typography Overrides for Light Mode */
 body.light h1,
 body.light h2,
 body.light h3,
@@ -182,19 +201,15 @@ body.light .text-dark-400 {
   color: #64748b !important;
 }
 
-body.light .bg-dark-700,
-body.light .bg-dark-700\/50,
-body.light .bg-dark-700\/60,
-body.light .bg-dark-700\/80 {
-  background-color: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
+body.light .text-primary-400 {
+  color: #2563eb !important;
 }
 
-body.light .hover\:bg-dark-700:hover,
-body.light .hover\:bg-dark-700\/50:hover {
-  background-color: #e2e8f0 !important;
+body.light .text-primary-500 {
+  color: #1d4ed8 !important;
 }
 
+/* Form Controls in Light Mode */
 body.light input,
 body.light textarea,
 body.light select,
@@ -210,16 +225,17 @@ body.light textarea::placeholder {
 }
 
 body.light .btn-secondary {
-  background-color: #ffffff !important;
+  background-color: #f1f5f9 !important;
   border-color: #cbd5e1 !important;
   color: #1e293b !important;
 }
 
 body.light .btn-secondary:hover {
-  background-color: #f1f5f9 !important;
+  background-color: #e2e8f0 !important;
   color: #0f172a !important;
 }
 
+/* Tables in Light Mode */
 body.light .table-container {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
@@ -236,7 +252,7 @@ body.light .table tr {
 }
 
 body.light .table tr:hover {
-  background-color: #f1f5f9 !important;
+  background-color: #f8fafc !important;
 }
 
 body.light .table td {
@@ -244,17 +260,20 @@ body.light .table td {
   border-color: #e2e8f0 !important;
 }
 
-/* Maintain crisp dark code snippets in light mode for readability */
-body.light .bg-dark-900,
-body.light .bg-dark-950 {
+/* Code Snippets & Terminal in Light Mode - keep dark for readability */
+body.light pre,
+body.light code,
+body.light .font-mono.bg-dark-900,
+body.light .font-mono.bg-dark-950,
+body.light div.bg-dark-950,
+body.light div.bg-dark-900 {
   background-color: #0f172a !important;
-  color: #e2e8f0 !important;
+  color: #f8fafc !important;
   border-color: #334155 !important;
 }
 
-body.light .bg-dark-900 pre,
-body.light .bg-dark-950 pre,
-body.light .bg-dark-900 code,
-body.light .bg-dark-950 code {
+body.light pre code,
+body.light .bg-dark-950 span,
+body.light .bg-dark-900 span {
   color: #f1f5f9 !important;
 }

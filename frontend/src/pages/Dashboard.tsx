@@ -13,16 +13,16 @@ export function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Welcome Card */}
         <div className="lg:col-span-3">
-          <div className="card bg-gradient-to-r from-primary-900 to-dark-800 border-primary-800">
+          <div className="card welcome-banner bg-gradient-to-r from-primary-900 to-dark-800 border-primary-800">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-white mb-2">Welcome to Vulnalyze</h2>
-                <p className="text-dark-300">
+                <p className="text-dark-200">
                   Your comprehensive security vulnerability scanning platform. 
                   Start a scan to discover and remediate security issues.
                 </p>
               </div>
-              <Shield className="h-16 w-16 text-primary-500 hidden md:block" />
+              <Shield className="h-16 w-16 text-primary-400 hidden md:block" />
             </div>
           </div>
         </div>

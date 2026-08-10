@@ -111,7 +111,7 @@ export function RecentScansCard() {
                 <Link
                   key={scan.uuid}
                   to={`/results/${scan.uuid}`}
-                  className="block p-3 bg-dark-700/40 hover:bg-dark-700/80 rounded-lg transition-colors border border-dark-700/50 hover:border-dark-600"
+                  className="block p-3 bg-dark-700/80 hover:bg-dark-700 rounded-lg transition-colors border border-dark-600/60 shadow-sm"
                 >
                   <div className="flex justify-between items-start">
                     <div className="min-w-0 mr-2">

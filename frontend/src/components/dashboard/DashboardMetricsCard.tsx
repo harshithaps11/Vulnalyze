@@ -14,7 +14,7 @@ interface MetricItemProps {
 
 function MetricItem({ label, value }: MetricItemProps) {
   return (
-    <div className="bg-dark-700/30 p-2.5 rounded-lg border border-dark-700/50">
+    <div className="bg-dark-700/80 p-2.5 rounded-lg border border-dark-600/60 shadow-sm">
       <p className="text-xs text-dark-400 font-medium">{label}</p>
       <div className="flex items-end mt-1">
         <span className="text-xl font-bold text-dark-100">{value}</span>

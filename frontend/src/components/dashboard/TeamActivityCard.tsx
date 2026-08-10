@@ -66,7 +66,7 @@ export function TeamActivityCard() {
         ) : activities.length > 0 ? (
           <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar flex-grow">
             {activities.map(activity => (
-              <div key={activity.id} className="flex items-start bg-dark-700/40 p-2.5 rounded-lg border border-dark-700/50 hover:border-dark-600 transition-colors">
+              <div key={activity.id} className="flex items-start bg-dark-700/80 p-2.5 rounded-lg border border-dark-600/60 transition-colors shadow-sm">
                 <div className="w-7 h-7 rounded-full bg-primary-600/20 text-primary-400 flex items-center justify-center font-bold text-[11px] mr-2.5 mt-0.5 border border-primary-500/30 shrink-0">
                   {activity.userName.split(' ').map(n => n[0]).join('')}
                 </div>
