@@ -117,7 +117,7 @@
 }
 
 /* ==========================================================================
-   Executive Light Mode Styling System — Professional Deep Navy & Smooth Glows
+   PERFECT LIGHT MODE COLOR SYSTEM (Precision Overrides for 100% Contrast)
    ========================================================================== */
 body.light {
   background-color: #f8fafc !important;
@@ -128,103 +128,81 @@ body.light main {
   background-color: #f8fafc !important;
 }
 
-/* Header in Light Mode — Crisp White with Subtle Border & Shadow */
+/* Header Navbar in Light Mode */
 body.light header {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
   box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05) !important;
 }
 
-body.light header .text-white,
-body.light header span.text-white,
-body.light header a {
-  color: #0f172a !important;
+body.light header a,
+body.light header button,
+body.light header span {
+  color: #1e293b !important;
 }
 
-body.light header .text-dark-300 {
-  color: #334155 !important;
+body.light header a:hover,
+body.light header button:hover {
+  color: #1e3a8a !important;
 }
 
 body.light header .hover\:bg-dark-700:hover {
   background-color: #f1f5f9 !important;
-  color: #1e3a8a !important;
 }
 
-/* Welcome Banner in Light Mode — Deep Executive Navy Blue Gradient */
+/* Welcome Banner in Light Mode - Deep Navy Blue with White Text */
 body.light .welcome-banner {
   background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%) !important;
   border-color: #1e40af !important;
-  color: #ffffff !important;
   box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.25) !important;
 }
+
 body.light .welcome-banner h2,
 body.light .welcome-banner p,
+body.light .welcome-banner span,
 body.light .welcome-banner svg {
   color: #ffffff !important;
 }
 
-/* Cards in Light Mode — Crisp White with Rounded Glow Shadows */
+/* Cards & Main Panels */
 body.light .card,
-body.light div.card,
-body.light [class*="bg-dark-800"] {
+body.light div.card {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03) !important;
 }
 
 body.light .card:hover,
 body.light div.card:hover {
   border-color: #cbd5e1 !important;
-  box-shadow: 0 12px 28px -5px rgba(15, 23, 42, 0.1) !important;
+  box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.08) !important;
 }
 
-/* Sub-containers & List Items in Light Mode */
+/* Sub-items / Lists / Metric cards inside Cards */
 body.light [class*="bg-dark-700"],
+body.light [class*="bg-dark-800"],
 body.light [class*="bg-dark-900"] {
   background-color: #f8fafc !important;
   border-color: #e2e8f0 !important;
 }
 
-body.light .hover\:bg-dark-700\/80:hover,
-body.light .hover\:bg-dark-700\/50:hover,
-body.light .hover\:bg-dark-700:hover {
-  background-color: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
+/* Hover effects on list items */
+body.light a.block[class*="bg-dark-700"]:hover,
+body.light div[class*="bg-dark-700"]:hover {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
 }
 
-/* Primary Color Overrides in Light Mode — Deep Navy Blue (#1e3a8a) */
-body.light .text-primary-400,
-body.light .text-primary-500 {
-  color: #1e3a8a !important;
-}
-
-body.light .bg-primary-600,
-body.light .btn-primary {
-  background-color: #1e3a8a !important;
-  border-color: #1e40af !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 14px 0 rgba(30, 58, 138, 0.3) !important;
-}
-
-body.light .btn-primary:hover {
-  background-color: #1e40af !important;
-  box-shadow: 0 6px 20px 0 rgba(30, 58, 138, 0.4) !important;
-}
-
-body.light .bg-primary-500\/20,
-body.light .bg-primary-600\/20 {
-  background-color: rgba(30, 58, 138, 0.1) !important;
-  color: #1e3a8a !important;
-}
-
-/* High Contrast Typography */
+/* Text Color Hierarchy in Light Mode */
 body.light h1,
 body.light h2,
 body.light h3,
 body.light h4,
 body.light h5,
-body.light h6,
-body.light .text-white,
+body.light h6 {
+  color: #0f172a !important;
+}
+
 body.light .text-dark-100 {
   color: #0f172a !important;
 }
@@ -239,6 +217,87 @@ body.light .text-dark-300 {
 
 body.light .text-dark-400 {
   color: #64748b !important;
+}
+
+body.light .text-primary-400,
+body.light .text-primary-500 {
+  color: #1e3a8a !important;
+}
+
+/* Primary Button in Light Mode - Deep Navy Blue with White Text */
+body.light .btn-primary,
+body.light button.btn-primary,
+body.light a.btn-primary {
+  background-color: #1e3a8a !important;
+  border-color: #1e40af !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px 0 rgba(30, 58, 138, 0.3) !important;
+}
+
+body.light .btn-primary:hover,
+body.light button.btn-primary:hover,
+body.light a.btn-primary:hover {
+  background-color: #1e40af !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 20px 0 rgba(30, 58, 138, 0.4) !important;
+}
+
+body.light .btn-primary * {
+  color: #ffffff !important;
+}
+
+/* Secondary Button in Light Mode */
+body.light .btn-secondary,
+body.light button.btn-secondary,
+body.light a.btn-secondary {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+body.light .btn-secondary:hover,
+body.light button.btn-secondary:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+body.light .btn-danger {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+body.light .btn-danger * {
+  color: #ffffff !important;
+}
+
+/* Badges in Light Mode - High Contrast Tints */
+body.light .badge-critical {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+}
+
+body.light .badge-high {
+  background-color: #ffedd5 !important;
+  color: #9a3412 !important;
+  border-color: #fdba74 !important;
+}
+
+body.light .badge-medium {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fde047 !important;
+}
+
+body.light .badge-low {
+  background-color: #d1fae5 !important;
+  color: #065f46 !important;
+  border-color: #6ee7b7 !important;
+}
+
+body.light .badge-info {
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+  border-color: #93c5fd !important;
 }
 
 /* Inputs & Form Controls in Light Mode */
@@ -265,22 +324,10 @@ body.light textarea::placeholder {
   color: #94a3b8 !important;
 }
 
-body.light .btn-secondary {
-  background-color: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-  color: #1e293b !important;
-}
-
-body.light .btn-secondary:hover {
-  background-color: #e2e8f0 !important;
-  color: #0f172a !important;
-}
-
 /* Tables in Light Mode */
 body.light .table-container {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05) !important;
 }
 
 body.light .table th {
@@ -294,7 +341,7 @@ body.light .table tr {
 }
 
 body.light .table tr:hover {
-  background-color: #f8fafc !important;
+  background-color: #f1f5f9 !important;
 }
 
 body.light .table td {
@@ -302,7 +349,7 @@ body.light .table td {
   border-color: #e2e8f0 !important;
 }
 
-/* Code Snippets & Terminal in Light Mode - keep dark contrast with rounded corners */
+/* Code Snippets & Terminal in Light Mode - High Contrast Dark Containers */
 body.light pre,
 body.light code,
 body.light .font-mono.bg-dark-900,
@@ -315,8 +362,24 @@ body.light div.bg-dark-900 {
   border-radius: 0.75rem !important;
 }
 
-body.light pre code,
-body.light .bg-dark-950 span,
-body.light .bg-dark-900 span {
-  color: #f1f5f9 !important;
+body.light pre *,
+body.light code *,
+body.light .bg-dark-950 *,
+body.light .bg-dark-900 * {
+  color: #f8fafc !important;
+}
+
+/* Footer in Light Mode */
+body.light footer {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+body.light footer a {
+  color: #334155 !important;
+}
+
+body.light footer a:hover {
+  color: #1e3a8a !important;
 }
