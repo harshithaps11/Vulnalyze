@@ -38,6 +38,20 @@ export const authApi = {
     return response;
   },
 
+  async register(email: string, password: string, fullName: string, organizationId: number = 1) {
+    const response = await apiClient.post('/auth/register', {
+      email,
+      password,
+      full_name: fullName,
+      organization_id: organizationId,
+    });
+    // Auto-login after successful registration
+    if (response.data) {
+      await this.login(email, password);
+    }
+    return response;
+  },
+
   async logout() {
     localStorage.removeItem('vulnalyze_token');
   },

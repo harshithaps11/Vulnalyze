@@ -38,6 +38,7 @@ function App() {
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/scan" element={<ProtectedRoute><ScanConfiguration /></ProtectedRoute>} />
             <Route path="/scan/progress/:scanId" element={<ProtectedRoute><ScanProgress /></ProtectedRoute>} />
+            <Route path="/progress/:scanId" element={<ProtectedRoute><ScanProgress /></ProtectedRoute>} />
             <Route path="/results" element={<ProtectedRoute><ScanResults /></ProtectedRoute>} />
             <Route path="/results/:scanId" element={<ProtectedRoute><ScanResults /></ProtectedRoute>} />
             <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />

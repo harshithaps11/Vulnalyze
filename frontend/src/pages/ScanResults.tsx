@@ -19,12 +19,12 @@ export function ScanResults() {
   const [aiEngine, setAiEngine] = useState<string>('');
 
   const handleAiAnalyze = async () => {
-    if (!scanId) return;
+    if (!effectiveScanId) return;
     setAiLoading(true);
     setAiError(null);
     setAiExpanded(true);
     try {
-      const res = await apiClient.post(`/scans/${scanId}/ai-analyze`);
+      const res = await apiClient.post(`/scans/${effectiveScanId}/ai-analyze`);
       setAiAnalysis(res.data.analysis);
       setAiEngine(res.data.engine || '');
     } catch (err: any) {
@@ -34,20 +34,45 @@ export function ScanResults() {
     }
   };
 
-  useEffect(() => {
-    if (!scanId) {
-      setSummary(null);
-      return;
-    }
+  const [effectiveScanId, setEffectiveScanId] = useState<string | undefined>(scanId);
 
-    setSummaryLoading(true);
-    apiClient.get(`/scans/${scanId}/summary`)
-      .then((response) => setSummary(response.data))
-      .catch((error) => {
+  useEffect(() => {
+    async function loadSummary() {
+      setSummaryLoading(true);
+      let targetId = scanId;
+
+      if (!targetId) {
+        try {
+          const listRes = await apiClient.get('/scans');
+          if (listRes.data && listRes.data.length > 0) {
+            targetId = listRes.data[0].uuid;
+            setEffectiveScanId(targetId);
+          }
+        } catch (e) {
+          console.error('Failed to list scans:', e);
+        }
+      } else {
+        setEffectiveScanId(scanId);
+      }
+
+      if (!targetId) {
+        setSummary(null);
+        setSummaryLoading(false);
+        return;
+      }
+
+      try {
+        const response = await apiClient.get(`/scans/${targetId}/summary`);
+        setSummary(response.data);
+      } catch (error) {
         console.error('Failed to load scan summary:', error);
         setSummary(null);
-      })
-      .finally(() => setSummaryLoading(false));
+      } finally {
+        setSummaryLoading(false);
+      }
+    }
+
+    loadSummary();
   }, [scanId]);
 
   const handlePrint = () => {
@@ -161,7 +186,7 @@ export function ScanResults() {
       description="Detailed findings from your security scan"
       actions={
         <div className="flex gap-2">
-          {scanId && (
+          {effectiveScanId && (
             <Button
               variant="secondary"
               size="sm"
@@ -200,7 +225,7 @@ export function ScanResults() {
       }
     >
       <div className="space-y-6">
-        {scanId && (
+        {effectiveScanId && (
           <Card title="Scan Summary" subtitle="A concise view of the latest findings from the backend">
             {summaryLoading ? (
               <p className="text-sm text-dark-400">Loading scan summary...</p>
@@ -240,10 +265,10 @@ export function ScanResults() {
             )}
           </Card>
         )}
-        <VulnerabilityTable scanId={scanId} />
+        <VulnerabilityTable scanId={effectiveScanId} />
 
         {/* AI Analysis Panel */}
-        {scanId && (
+        {effectiveScanId && (
           <Card>
             <div
               className="flex items-center justify-between cursor-pointer"
