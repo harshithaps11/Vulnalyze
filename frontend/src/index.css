@@ -117,7 +117,7 @@
 }
 
 /* ==========================================================================
-   PERFECT LIGHT MODE COLOR SYSTEM (Precision Overrides for 100% Contrast)
+   PERFECT LIGHT MODE TEXT & CONTRAST ENGINE (100% Legibility Guaranteed)
    ========================================================================== */
 body.light {
   background-color: #f8fafc !important;
@@ -128,17 +128,49 @@ body.light main {
   background-color: #f8fafc !important;
 }
 
-/* Header Navbar in Light Mode */
+/* Universal Light Mode Typography Default */
+body.light,
+body.light p,
+body.light span,
+body.light div,
+body.light h1, body.light h2, body.light h3, body.light h4, body.light h5, body.light h6,
+body.light label {
+  color: #0f172a;
+}
+
+/* Force dark text on elements that had dark-mode white/slate classes */
+body.light .text-dark-100,
+body.light .text-dark-200,
+body.light .text-white:not(.welcome-banner *):not(.btn-primary *):not(.btn-danger *):not(.btn-success *) {
+  color: #0f172a !important;
+}
+
+body.light .text-dark-300 {
+  color: #334155 !important;
+}
+
+body.light .text-dark-400,
+body.light .text-dark-500 {
+  color: #475569 !important;
+}
+
+body.light .text-primary-400,
+body.light .text-primary-500 {
+  color: #1e3a8a !important;
+}
+
+/* Header Navigation Bar in Light Mode */
 body.light header {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05) !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06) !important;
 }
 
 body.light header a,
 body.light header button,
-body.light header span {
-  color: #1e293b !important;
+body.light header span,
+body.light header div {
+  color: #0f172a !important;
 }
 
 body.light header a:hover,
@@ -191,37 +223,6 @@ body.light a.block[class*="bg-dark-700"]:hover,
 body.light div[class*="bg-dark-700"]:hover {
   background-color: #eff6ff !important;
   border-color: #bfdbfe !important;
-}
-
-/* Text Color Hierarchy in Light Mode */
-body.light h1,
-body.light h2,
-body.light h3,
-body.light h4,
-body.light h5,
-body.light h6 {
-  color: #0f172a !important;
-}
-
-body.light .text-dark-100 {
-  color: #0f172a !important;
-}
-
-body.light .text-dark-200 {
-  color: #1e293b !important;
-}
-
-body.light .text-dark-300 {
-  color: #334155 !important;
-}
-
-body.light .text-dark-400 {
-  color: #64748b !important;
-}
-
-body.light .text-primary-400,
-body.light .text-primary-500 {
-  color: #1e3a8a !important;
 }
 
 /* Primary Button in Light Mode - Deep Navy Blue with White Text */
@@ -321,7 +322,7 @@ body.light .input:focus {
 
 body.light input::placeholder,
 body.light textarea::placeholder {
-  color: #94a3b8 !important;
+  color: #64748b !important;
 }
 
 /* Tables in Light Mode */
@@ -374,6 +375,12 @@ body.light footer {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
   color: #475569 !important;
+}
+
+body.light footer p,
+body.light footer span,
+body.light footer h4 {
+  color: #334155 !important;
 }
 
 body.light footer a {
