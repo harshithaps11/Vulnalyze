@@ -1,0 +1,37 @@
+{
+  "xss.py": {
+    "min_findings": 1,
+    "expected_rules": ["Cross-Site Scripting (XSS)"],
+    "expected_cwes": ["79"]
+  },
+  "sql_injection.py": {
+    "min_findings": 1,
+    "expected_rules": ["SQL Injection"],
+    "expected_cwes": ["89"]
+  },
+  "command_injection.py": {
+    "min_findings": 2,
+    "expected_rules": ["Command/Code Injection", "OS Command Injection"],
+    "expected_cwes": ["78"]
+  },
+  "ssrf.py": {
+    "min_findings": 1,
+    "expected_rules": ["Server-Side Request Forgery"],
+    "expected_cwes": ["918"]
+  },
+  "weak_crypto.py": {
+    "min_findings": 2,
+    "expected_rules": ["Weak Cryptographic Hash", "Insecure Random"],
+    "expected_cwes": ["327", "338"]
+  },
+  "hardcoded_secret.py": {
+    "min_findings": 1,
+    "expected_rules": ["Hardcoded Password", "Hardcoded API Key"],
+    "expected_cwes": ["798"]
+  },
+  "insecure_deserialization.py": {
+    "min_findings": 1,
+    "expected_rules": ["Insecure Deserialization"],
+    "expected_cwes": ["502"]
+  }
+}

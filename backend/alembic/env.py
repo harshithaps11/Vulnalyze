@@ -7,11 +7,17 @@ from alembic import context
 from app.core.config import get_settings
 from app.models.base import Base
 
+# Import all models so their metadata is registered with Base
+import app.models.models  # noqa: F401
+
 settings = get_settings()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Override sqlalchemy.url from application settings
+config.set_main_option("sqlalchemy.url", settings.SQLALCHEMY_DATABASE_URI.replace("+aiosqlite", "").replace("+asyncpg", "+psycopg2") if settings.SQLALCHEMY_DATABASE_URI else "")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -81,4 +87,4 @@ def run_migrations_online() -> None:
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    run_migrations_online() 
+    run_migrations_online()

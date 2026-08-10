@@ -13,16 +13,27 @@ RUN pip wheel --wheel-dir /wheels -r requirements.txt
 
 FROM python:3.12-slim
 
+# Install runtime PostgreSQL client lib
+RUN apt-get update && apt-get install -y libpq5 curl && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash vulnalyze
 WORKDIR /code
 
 COPY --from=builder /wheels /wheels
 RUN pip install --no-cache-dir /wheels/*
 
+# Copy application code
 COPY app/ ./app/
 COPY setup_db.py .
+COPY alembic/ ./alembic/
+COPY alembic.ini .
 
-# Create data directory for SQLite fallback
-RUN mkdir -p backend/data
+# Create data directory for SQLite fallback (local dev only)
+RUN mkdir -p data && chown -R vulnalyze:vulnalyze /code
+
+# Switch to non-root user
+USER vulnalyze
 
 EXPOSE 8000
 

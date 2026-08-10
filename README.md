@@ -1,138 +1,146 @@
-# Vulnalyze 🛡️
+# Vulnalyze — Application Security Platform
 
-**AI-powered security vulnerability scanner** — static code analysis + dynamic DAST scanning with a beautiful React dashboard.
+An integrated security scanning platform combining static analysis (SAST), dynamic analysis (DAST), dependency scanning, IaC scanning, and AI-powered remediation.
 
----
+## Architecture
 
-## Quick Start (Docker)
+```
+┌─────────────┐    ┌──────────────────┐    ┌───────────────┐
+│   Frontend   │───▶│   FastAPI Backend │───▶│  PostgreSQL   │
+│  React/Vite  │    │   (API + Scan)   │    │  (or SQLite)  │
+└─────────────┘    └──────┬───────────┘    └───────────────┘
+                          │
+              ┌───────────┼───────────┐
+              ▼           ▼           ▼
+        ┌──────────┐ ┌──────────┐ ┌──────────┐
+        │ Semgrep  │ │  ZAP     │ │ AI Agent │
+        │ (SAST)   │ │ (DAST)   │ │(LangChain│
+        └──────────┘ └──────────┘ └──────────┘
+```
+
+## Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| **Static Analysis (SAST)** | ✅ Working | Semgrep + 30+ built-in regex rules |
+| **HTTP Header Scan** | ✅ Working | Real httpx requests, OWASP headers |
+| **Dynamic Analysis (DAST)** | ✅ Working | OWASP ZAP (falls back to header scan) |
+| **AI Remediation** | ✅ Working | LangChain + OpenRouter + Ollama + rule-based fallback |
+| **Dependency Scanning** | ✅ Available | pip-audit + npm audit (optional) |
+| **IaC Scanning** | ✅ Available | Terraform, Docker, K8s patterns |
+| **Container Scanning** | ✅ Available | Trivy wrapper (optional) |
+| **Network Scanning** | ✅ Available | Nmap wrapper (optional) |
+| **SARIF Export** | ✅ Available | v2.1.0, GitHub Security compatible |
+| **SSRF Protection** | ✅ Enforced | Blocks private/reserved IPs |
+| **Audit Logging** | ✅ Available | Tracks security-relevant actions |
+| **JWT Authentication** | ✅ Working | bcrypt + HS256 |
+| **RBAC** | ✅ Working | ADMIN, USER, SECURITY_ANALYST |
+
+## Quick Start
+
+### Prerequisites
+- Python 3.12+
+- Node.js 20+
+- (Optional) Docker & Docker Compose
+
+### Local Development
 
 ```bash
-git clone https://github.com/your-username/Vulnalyze.git
+# 1. Clone the repository
+git clone https://github.com/harshithaps11/Vulnalyze.git
 cd Vulnalyze
 
-# Copy and configure environment variables
+# 2. Set up environment
 cp .env.example .env
+# Edit .env with your values (especially SECRET_KEY)
 
-# Start everything — PostgreSQL + FastAPI backend + React frontend
-docker compose up
-```
-
-| Service  | URL                        |
-|----------|----------------------------|
-| Frontend | http://localhost:5173      |
-| Backend  | http://localhost:8000      |
-| API Docs | http://localhost:8000/docs |
-
-> **Default credentials:** `admin@vulnalyze.com` / `admin123`
-
----
-
-## Project Structure
-
-```
-Vulnalyze/
-├── frontend/                  # React + Vite + TypeScript
-│   ├── src/
-│   │   ├── components/        # UI components (dashboard, scan, results)
-│   │   ├── pages/             # Route-level pages
-│   │   ├── services/          # API client (axios)
-│   │   └── data/              # Mock data (fallback only)
-│   ├── Dockerfile
-│   └── package.json
-│
-├── backend/                   # FastAPI + SQLAlchemy
-│   ├── app/
-│   │   ├── api/               # Route handlers
-│   │   ├── core/              # Config, settings
-│   │   ├── db/                # DB session
-│   │   ├── models/            # SQLAlchemy ORM models
-│   │   ├── schemas/           # Pydantic schemas
-│   │   ├── services/
-│   │   │   └── scanner.py     # Static (regex/AST) + dynamic (ZAP) scanner
-│   │   └── main.py            # FastAPI app entry point
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── setup_db.py            # DB init + seed script
-│
-├── docker-compose.yml         # One-command startup
-├── .env.example               # Environment variable template
-└── README.md
-```
-
----
-
-## Running Without Docker
-
-### Backend
-
-```bash
+# 3. Backend
 cd backend
 python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # macOS/Linux
-
+source venv/bin/activate  # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
-python setup_db.py           # Creates SQLite DB + seed data
-uvicorn app.main:app --reload --port 8000
-```
+python setup_db.py
+uvicorn app.main:app --reload
 
-### Frontend
-
-```bash
+# 4. Frontend (new terminal)
 cd frontend
 npm install
-cp .env.example .env.local   # Set VITE_API_BASE_URL=http://localhost:8000
 npm run dev
 ```
 
----
+### Docker Compose
 
-## How Scanning Works
-
-```
-User submits scan
-      ↓
-POST /api/v1/scans  (FastAPI)
-      ↓
-Background Task starts
-      ↓
-Static Scanner (regex/AST on source code)
-  + Dynamic Scanner (OWASP ZAP or fallback)
-      ↓
-Results saved to PostgreSQL
-      ↓
-GET /api/v1/scans/{uuid}  →  React Dashboard
+```bash
+cp .env.example .env
+docker compose up --build
 ```
 
-The scanner detects:
-- **XSS** — unsafe `innerHTML` without `DOMPurify`
-- **SQL Injection** — string concatenation in SQL queries
-- **Command Injection** — `eval()`, `exec()`, `spawn()`
-- **Weak Crypto** — MD5 / SHA-1 usage
+Services: Backend (:8000), Frontend (:5173), PostgreSQL (:5432), Redis (:6379), ZAP (:8080)
 
----
+### Default Dev Credentials
 
-## Tech Stack
+> ⚠️ **DEVELOPMENT ONLY** — Change immediately in production.
 
-| Layer     | Technology                            |
-|-----------|---------------------------------------|
-| Frontend  | React 18, TypeScript, Vite, Tailwind  |
-| Backend   | FastAPI, SQLAlchemy (async), uvicorn  |
-| Database  | PostgreSQL (Docker) / SQLite (local)  |
-| Scanner   | Semgrep (optional) + regex/AST fallback + OWASP ZAP (optional) |
-| Auth      | JWT (python-jose) + bcrypt            |
+- **Email:** `admin@vulnalyze.com`
+- **Password:** `admin123`
 
-## CI/CD
+## API Endpoints
 
-Vulnalyze includes a GitHub Actions pipeline that runs backend tests and frontend production builds on every pull request. On pushes to `main` or version tags, the workflow also builds and publishes Docker images for the backend and frontend to GitHub Container Registry.
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/v1/auth/login` | JWT login |
+| POST | `/api/v1/auth/register` | User registration |
+| GET | `/api/v1/auth/me` | Current user profile |
+| POST | `/api/v1/scans` | Create a new scan |
+| GET | `/api/v1/scans` | List recent scans |
+| GET | `/api/v1/scans/{id}` | Get scan details |
+| GET | `/api/v1/scans/{id}/status` | Poll scan status |
+| GET | `/api/v1/scans/{id}/summary` | Severity breakdown |
+| GET | `/api/v1/scans/{id}/sarif` | SARIF v2.1.0 export |
+| POST | `/api/v1/scans/{id}/ai-analyze` | AI remediation |
+| PUT | `/api/v1/scans/{id}/vulnerabilities/{vid}` | Mark false positive |
+| GET | `/api/v1/health` | Health check |
+| GET | `/api/v1/health/ready` | Readiness check |
+| POST | `/api/analyze` | AI code analysis |
+| POST | `/api/fix` | AI code fix |
+| POST | `/api/explain` | AI code explanation |
+| POST | `/api/best-practices` | AI best practices |
+| POST | `/api/performance` | AI performance analysis |
 
----
+## Scanner Capabilities
 
-## Environment Variables
+### Built-in Rule Engine (30+ rules)
+- **A01** Broken Access Control (IDOR, session tampering)
+- **A02** Cryptographic Failures (MD5, SHA-1, DES, hardcoded secrets)
+- **A03** Injection (XSS, SQLi, command injection, XXE, YAML, pickle)
+- **A04** Insecure Design (debug mode)
+- **A05** Security Misconfiguration (SSL bypass, wildcard CORS)
+- **A07** Authentication Failures (JWT none, auth bypass, insecure random)
+- **A08** Software Integrity (dynamic imports)
+- **A09** Logging Failures (sensitive data in logs)
+- **A10** SSRF (user-controlled URLs)
+- **AI/LLM** Prompt injection, API key exposure, unvalidated LLM output
 
-See [`.env.example`](.env.example) for all available variables.
+### External Scanners (Optional)
+- **Semgrep** — Professional SAST rules (`auto` config)
+- **OWASP ZAP** — Full spider + active scan DAST
+- **pip-audit** / **npm audit** — Dependency vulnerability scanning
+- **Trivy** — Container image vulnerability scanning
+- **Nmap** — Network port/service scanning
 
-Key variables:
-- `POSTGRES_*` — database connection (auto-configured in Docker)
-- `SECRET_KEY` — JWT signing key (**change in production**)
-- `OPENROUTER_API_KEY` — AI-powered remediation suggestions (optional)
+## Running Tests
+
+```bash
+# Backend tests
+cd backend && python -m pytest tests/ -v
+
+# Security test benchmark
+python security-tests/test_detection.py
+
+# Frontend build
+cd frontend && npm run build
+```
+
+## License
+
+See [LICENSE](./LICENSE) for details.

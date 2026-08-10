@@ -1,4 +1,13 @@
 
+# Environment / Secrets — NEVER commit these
+.env
+.env.local
+.env.*.local
+
+# SQLite database files
+backend/data/*.db
+*.sqlite3
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
