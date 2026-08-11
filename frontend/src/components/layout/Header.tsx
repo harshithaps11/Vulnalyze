@@ -12,7 +12,9 @@ import {
   ChevronDown,
   LogOut,
   Bell,
-  Code
+  Code,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { currentUser } from '../../data/mockData';
@@ -21,10 +23,24 @@ import { authApi } from '../../services/apiClient';
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'dark';
+  });
   const navigate = useNavigate();
   
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const toggleProfileDropdown = () => setIsProfileDropdownOpen(!isProfileDropdownOpen);
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    localStorage.setItem('theme', next);
+    if (next === 'light') {
+      document.body.classList.add('light');
+    } else {
+      document.body.classList.remove('light');
+    }
+  };
 
   const handleLogout = async () => {
     await authApi.logout();
@@ -41,14 +57,14 @@ export function Header() {
   ];
 
   return (
-    <header className="bg-dark-800 border-b border-dark-700 sticky top-0 z-50">
+    <header className="bg-dark-800 border-b border-dark-700 sticky top-0 z-50 transition-colors duration-200">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2">
               <Shield className="h-8 w-8 text-primary-500" />
-              <span className="text-xl font-bold text-white">Vulnalyze</span>
+              <span className="text-xl font-bold text-dark-100">Vulnalyze</span>
             </Link>
           </div>
 
@@ -58,7 +74,7 @@ export function Header() {
               <Link
                 key={item.name}
                 to={item.path}
-                className="flex items-center px-3 py-2 text-sm font-medium text-dark-300 rounded-md hover:bg-dark-700 hover:text-white transition-colors"
+                className="flex items-center px-3 py-2 text-sm font-medium text-dark-300 rounded-md hover:bg-dark-700 hover:text-dark-100 transition-colors"
               >
                 <span className="mr-2">{item.icon}</span>
                 {item.name}
@@ -66,10 +82,19 @@ export function Header() {
             ))}
           </nav>
 
-          {/* Right Section - Notifications & Profile */}
+          {/* Right Section */}
           <div className="flex items-center">
+            {/* Theme Toggle */}
+            <button 
+              onClick={toggleTheme}
+              className="p-2 text-dark-300 hover:text-dark-100 hover:bg-dark-700 rounded-full mr-2 transition-colors"
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+
             {/* Notifications */}
-            <button className="p-2 text-dark-300 hover:text-white hover:bg-dark-700 rounded-full relative mr-2">
+            <button className="p-2 text-dark-300 hover:text-dark-100 hover:bg-dark-700 rounded-full relative mr-2 transition-colors">
               <Bell size={20} />
               <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-accent-500 ring-2 ring-dark-800"></span>
             </button>
@@ -78,7 +103,7 @@ export function Header() {
             <div className="ml-2 relative">
               <button
                 onClick={toggleProfileDropdown}
-                className="flex items-center gap-2 p-1 rounded-full hover:bg-dark-700 focus:outline-none"
+                className="flex items-center gap-2 p-1 rounded-full hover:bg-dark-700 focus:outline-none transition-colors"
               >
                 <Avatar 
                   src={currentUser.avatar} 
@@ -86,7 +111,7 @@ export function Header() {
                   size="sm"
                   status="online"
                 />
-                <span className="hidden md:block text-sm font-medium text-white">{currentUser.name}</span>
+                <span className="hidden md:block text-sm font-medium text-dark-100">{currentUser.name}</span>
                 <ChevronDown className="h-4 w-4 text-dark-400" />
               </button>
               
@@ -94,17 +119,17 @@ export function Header() {
                 <div className="absolute right-0 mt-2 w-48 rounded-md bg-dark-800 border border-dark-700 shadow-lg">
                   <div className="py-1">
                     <div className="px-4 py-2 border-b border-dark-700">
-                      <p className="text-sm font-medium text-white">{currentUser.name}</p>
+                      <p className="text-sm font-medium text-dark-100">{currentUser.name}</p>
                       <p className="text-xs text-dark-400">{currentUser.email}</p>
                     </div>
-                    <Link to="/profile" className="block px-4 py-2 text-sm text-dark-300 hover:bg-dark-700 hover:text-white">
+                    <Link to="/profile" className="block px-4 py-2 text-sm text-dark-300 hover:bg-dark-700 hover:text-dark-100">
                       Your Profile
                     </Link>
-                    <Link to="/settings" className="block px-4 py-2 text-sm text-dark-300 hover:bg-dark-700 hover:text-white">
+                    <Link to="/settings" className="block px-4 py-2 text-sm text-dark-300 hover:bg-dark-700 hover:text-dark-100">
                       Settings
                     </Link>
                     <button
-                      className="w-full text-left px-4 py-2 text-sm text-dark-300 hover:bg-dark-700 hover:text-white flex items-center"
+                      className="w-full text-left px-4 py-2 text-sm text-dark-300 hover:bg-dark-700 hover:text-dark-100 flex items-center"
                       onClick={handleLogout}
                     >
                       <LogOut size={16} className="mr-2" />
@@ -119,7 +144,7 @@ export function Header() {
             <div className="ml-2 -mr-2 flex md:hidden">
               <button
                 onClick={toggleMobileMenu}
-                className="inline-flex items-center justify-center p-2 rounded-md text-dark-400 hover:text-white hover:bg-dark-700 focus:outline-none"
+                className="inline-flex items-center justify-center p-2 rounded-md text-dark-400 hover:text-dark-100 hover:bg-dark-700 focus:outline-none"
               >
                 <span className="sr-only">Open main menu</span>
                 {isMobileMenuOpen ? (
@@ -141,7 +166,7 @@ export function Header() {
               <Link
                 key={item.name}
                 to={item.path}
-                className="flex items-center px-3 py-2 rounded-md text-base font-medium text-dark-300 hover:bg-dark-700 hover:text-white"
+                className="flex items-center px-3 py-2 rounded-md text-base font-medium text-dark-300 hover:bg-dark-700 hover:text-dark-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <span className="mr-2">{item.icon}</span>

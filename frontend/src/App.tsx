@@ -20,13 +20,17 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
 
 function App() {
   React.useEffect(() => {
-    localStorage.removeItem('theme');
-    document.body.classList.remove('light');
+    const saved = localStorage.getItem('theme') || 'dark';
+    if (saved === 'light') {
+      document.body.classList.add('light');
+    } else {
+      document.body.classList.remove('light');
+    }
   }, []);
 
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <div className="min-h-screen bg-dark-900 flex flex-col">
+      <div className="min-h-screen bg-dark-900 flex flex-col transition-colors duration-200">
         {authApi.isAuthenticated() ? <Header /> : null}
         <main className="flex-1">
           <Routes>
