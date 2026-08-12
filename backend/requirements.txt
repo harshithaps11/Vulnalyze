@@ -25,3 +25,4 @@ langchain-community>=0.3.0
 langchain-core>=0.3.0
 # Dependency scanning
 pip-audit>=2.7.0
+crewai>=0.60.0  

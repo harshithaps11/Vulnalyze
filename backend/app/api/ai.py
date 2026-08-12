@@ -18,6 +18,7 @@ from app.db.session import get_db
 from app.models.models import Scan, User
 from app.api.deps import get_current_user
 from app.services.ai_agent import run_langchain_security_agent
+from app.services.crew_agent import RemediationCrew
 
 settings = get_settings()
 
@@ -30,6 +31,13 @@ OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
 # ── Pydantic request models ─────────────────────────────────────────────────
+
+class CrewPatchRequest(BaseModel):
+    vulnerability_id: str
+    title: str
+    description: str
+    source_code: str
+    language: str
 
 class CodeRequest(BaseModel):
     code: str
@@ -124,6 +132,44 @@ async def call_openrouter(messages: List[dict], temperature: float = 0.7) -> dic
             }
         }]
     }
+
+# ── CrewAI Autonomous Patch Generation ────────────────────────────────────────
+
+@router.post(f"{settings.API_V1_STR}/ai/generate-patch")
+async def generate_patch(
+    request: CrewPatchRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Run CrewAI autonomous remediation to generate a patch for a vulnerability.
+    """
+    crew = RemediationCrew(
+        vulnerability_id=request.vulnerability_id,
+        title=request.title,
+        description=request.description,
+        source_code=request.source_code,
+        language=request.language
+    )
+    
+    result = crew.run()
+    
+    # Save the generated patch to the vulnerability record if we have an ID
+    if request.vulnerability_id and result.get("diff"):
+        # We need to look up the vulnerability by ID. Since the UI might send a string, we assume it's a numeric ID here for simplicity,
+        # but in a real app we'd want to handle UUIDs or specific ID formats.
+        try:
+            vuln_id_int = int(request.vulnerability_id)
+            from app.models.models import Vulnerability
+            vuln_result = await db.execute(select(Vulnerability).where(Vulnerability.id == vuln_id_int))
+            vuln = vuln_result.scalar_one_or_none()
+            if vuln:
+                vuln.generated_patch = result.get("diff")
+                await db.commit()
+        except ValueError:
+            pass # Not an int ID
+            
+    return result
 
 
 # ── LangChain scan analysis ─────────────────────────────────────────────────

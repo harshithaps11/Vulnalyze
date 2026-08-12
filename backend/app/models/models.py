@@ -89,6 +89,7 @@ class Vulnerability(Base):
     is_false_positive: Mapped[bool] = mapped_column(Boolean, default=False)
     false_positive_reason: Mapped[str] = mapped_column(Text, nullable=True)
     remediation: Mapped[str] = mapped_column(Text, nullable=True)
+    generated_patch: Mapped[str] = mapped_column(Text, nullable=True)
     vuln_metadata: Mapped[dict] = mapped_column(JSON, nullable=True)
 
     # ── New fields (Phase 2) ────────────────────────────────────────────────

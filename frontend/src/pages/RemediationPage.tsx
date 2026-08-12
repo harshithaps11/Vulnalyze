@@ -26,7 +26,7 @@ import {
   RefreshCw,
   FileCode2
 } from 'lucide-react';
-import { getCodeExplanation, getBestPractices, getPerformanceAnalysis } from '../services/aiService';
+import { getCodeExplanation, getBestPractices, getPerformanceAnalysis, generateAutonomousPatch, PatchResult } from '../services/aiService';
 import { Vulnerability } from '../services/wasmService';
 
 const EXAMPLE_VULNERABLE_CODE = `// Intentionally Vulnerable Security Remediation Sandbox
@@ -84,7 +84,7 @@ export function RemediationPage() {
   const location = useLocation();
   const [code, setCode] = useState(EXAMPLE_VULNERABLE_CODE);
   const [targetLine, setTargetLine] = useState<number | undefined>(undefined);
-  const [activeTab, setActiveTab] = useState<'editor' | 'analysis'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'analysis' | 'ai-fix'>('editor');
   const [remediationVulnerabilities, setRemediationVulnerabilities] = useState<Vulnerability[]>([]);
 
   // AI & Analysis State
@@ -96,6 +96,14 @@ export function RemediationPage() {
   }>({});
   const [aiSuggestions, setAISuggestions] = useState<string[]>([]);
   const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
+  
+  // CrewAI State
+  const [isGeneratingPatch, setIsGeneratingPatch] = useState(false);
+  const [generatedPatchResult, setGeneratedPatchResult] = useState<PatchResult | null>(null);
+  
+  // Vulnerability context for AI
+  const [vulnContext, setVulnContext] = useState<{ id: string, title: string, description: string, language: string } | null>(null);
+  const [isLoadingContext, setIsLoadingContext] = useState(false);
 
   // Payload Simulator State
   const [customPayload, setCustomPayload] = useState('');
@@ -111,12 +119,51 @@ export function RemediationPage() {
 
   const payloadRef = useRef<HTMLDivElement>(null);
 
-  // Load passed state from routing (e.g. from ScanResults)
+  // Load passed state from routing (e.g. from ScanResults) or fetch latest dynamically
   useEffect(() => {
-    if (location.state) {
-      if (location.state.code) setCode(location.state.code);
-      if (location.state.line) setTargetLine(location.state.line);
+    async function initContext() {
+      if (location.state && location.state.code) {
+        setCode(location.state.code);
+        if (location.state.line) setTargetLine(location.state.line);
+        setVulnContext({
+          id: location.state.vulnId || "local-sandbox",
+          title: location.state.title || "Unknown Vulnerability",
+          description: location.state.description || "Analyzed code in the Remediation Sandbox",
+          language: location.state.language || "javascript"
+        });
+      } else {
+        // Dynamic fetch fallback instead of hardcoded sandbox code
+        setIsLoadingContext(true);
+        try {
+          const { apiClient } = await import('../services/apiClient');
+          const res = await apiClient.get('/scans');
+          const scans = res.data || [];
+          if (scans.length > 0) {
+            const firstScan = await apiClient.get(`/scans/${scans[0].uuid}`);
+            const vulns = firstScan.data?.vulnerabilities || [];
+            if (vulns.length > 0) {
+              const v = vulns[0];
+              const evidenceCode = v.evidence || `// Vulnerability: ${v.title}\\n// Location: ${v.location}\\n// No code snippet available`;
+              setCode(evidenceCode);
+              setTargetLine(v.lineNumber || 1);
+              setVulnContext({
+                id: String(v.id),
+                title: v.title,
+                description: v.description || 'No description provided.',
+                language: 'javascript' // rough guess, could be derived from file extension
+              });
+              return;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to load dynamic finding", e);
+        } finally {
+          setIsLoadingContext(false);
+        }
+      }
     }
+    
+    initContext();
   }, [location.state]);
 
   // Load local code history
@@ -160,6 +207,26 @@ export function RemediationPage() {
       console.error('Error running AI code analysis:', err);
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleGeneratePatch = async () => {
+    if (!code.trim()) return;
+    setIsGeneratingPatch(true);
+    setActiveTab('ai-fix');
+    try {
+      const result = await generateAutonomousPatch(
+        vulnContext?.id || "sandbox-1", 
+        vulnContext?.title || "Vulnerable Code in Sandbox", 
+        vulnContext?.description || "Analyzed code in the Remediation Sandbox", 
+        code, 
+        vulnContext?.language || "javascript"
+      );
+      setGeneratedPatchResult(result);
+    } catch (err) {
+      console.error('Error generating patch:', err);
+    } finally {
+      setIsGeneratingPatch(false);
     }
   };
 
@@ -255,9 +322,20 @@ export function RemediationPage() {
             size="sm"
             icon={isAnalyzing ? <Loader2 size={16} className="animate-spin" /> : <Brain size={16} />}
             onClick={handleRunAIAnalysis}
-            disabled={isAnalyzing}
+            disabled={isAnalyzing || isGeneratingPatch}
           >
             {isAnalyzing ? 'Analyzing...' : 'Run AI Analysis'}
+          </Button>
+
+          <Button
+            variant="primary"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white border-none shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] transition-all duration-300"
+            size="sm"
+            icon={isGeneratingPatch ? <Loader2 size={16} className="animate-spin" /> : <Bot size={16} />}
+            onClick={handleGeneratePatch}
+            disabled={isGeneratingPatch || isAnalyzing}
+          >
+            {isGeneratingPatch ? 'AI Crew Working...' : 'Auto-Fix with AI Crew'}
           </Button>
 
           <Button
@@ -318,10 +396,22 @@ export function RemediationPage() {
                 <BookOpen size={16} />
                 AI Security Review & Best Practices
               </button>
+
+              <button
+                onClick={() => setActiveTab('ai-fix')}
+                className={`px-4 py-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all ${
+                  activeTab === 'ai-fix'
+                    ? 'border-primary-500 text-primary-400 font-bold'
+                    : 'border-transparent text-dark-400 hover:text-dark-200'
+                }`}
+              >
+                <Bot size={16} />
+                Auto-Generated Patch
+              </button>
             </div>
 
             <div className="p-5">
-              {activeTab === 'editor' ? (
+              {activeTab === 'editor' && (
                 <RemediationSandbox
                   initialCode={code}
                   onCodeChange={handleCodeChange}
@@ -329,7 +419,9 @@ export function RemediationPage() {
                   targetLine={targetLine}
                   onVulnerabilitiesChange={setRemediationVulnerabilities}
                 />
-              ) : (
+              )}
+              
+              {activeTab === 'analysis' && (
                 <div className="space-y-6 max-h-[550px] overflow-y-auto pr-1 custom-scrollbar">
                   {!analysisResults.explanation && !isAnalyzing && (
                     <div className="text-center py-12">
@@ -384,6 +476,94 @@ export function RemediationPage() {
                           <p className="text-xs text-dark-300">Current code aligns with standard security best practices.</p>
                         )}
                       </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {activeTab === 'ai-fix' && (
+                <div className="space-y-6 max-h-[550px] overflow-y-auto pr-1 custom-scrollbar">
+                  {!generatedPatchResult && !isGeneratingPatch && (
+                    <div className="text-center py-12">
+                      <Bot size={36} className="mx-auto text-indigo-400 mb-3" />
+                      <p className="text-sm text-dark-300">
+                        Click <span className="font-semibold text-dark-100">"Auto-Fix with AI Crew"</span> above to have specialized AI agents autonomously analyze and fix the vulnerable code.
+                      </p>
+                      <Button variant="primary" className="mt-4 bg-indigo-600 hover:bg-indigo-700 border-none" size="sm" onClick={handleGeneratePatch}>
+                        Run Autonomous Remediation
+                      </Button>
+                    </div>
+                  )}
+
+                  {isGeneratingPatch && (
+                    <div className="flex flex-col items-center justify-center py-16 text-dark-300 space-y-4">
+                      <div className="relative">
+                        <div className="absolute inset-0 rounded-full blur-md bg-indigo-500/30 animate-pulse"></div>
+                        <Loader2 size={48} className="animate-spin text-indigo-400 relative z-10" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-base font-semibold text-dark-100">AI Crew is working...</p>
+                        <p className="text-xs text-dark-400 mt-1">Security Analyst, Developer, and QA agents are collaborating to write a secure patch. This usually takes 30-60 seconds.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {generatedPatchResult && !isGeneratingPatch && (
+                    <div className="space-y-4">
+                      {/* AI Crew Explanation */}
+                      <div className="p-4 bg-indigo-900/10 rounded-xl border border-indigo-500/30">
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-indigo-400 mb-3 flex items-center gap-1.5">
+                          <Bot size={14} />
+                          CrewAI Remediation Report
+                        </h4>
+                        <div className="text-sm text-dark-200 leading-relaxed font-sans prose prose-invert max-w-none">
+                          {/* Rendering simple markdown for the explanation */}
+                          {generatedPatchResult.explanation.split('\n').map((line, i) => (
+                            <p key={i} className="mb-2">{line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Diff View */}
+                      {generatedPatchResult.diff && (
+                        <div className="rounded-xl overflow-hidden border border-dark-600/60 bg-[#1e1e1e]">
+                          <div className="flex justify-between items-center bg-dark-700/80 px-4 py-2 border-b border-dark-600/60">
+                            <h4 className="text-xs font-semibold text-dark-200 flex items-center gap-2">
+                              <FileCode2 size={14} className="text-primary-400" />
+                              Generated Patch (Diff)
+                            </h4>
+                            <Button 
+                              variant="secondary" 
+                              size="sm" 
+                              className="!py-1 !px-2 text-[10px]"
+                              onClick={() => {
+                                handleCodeChange(generatedPatchResult.diff.replace(/^[+-] /gm, ''));
+                                setActiveTab('editor');
+                              }}
+                            >
+                              Apply to Editor
+                            </Button>
+                          </div>
+                          <div className="p-4 overflow-x-auto text-xs font-mono leading-relaxed">
+                            {generatedPatchResult.diff.split('\n').map((line, i) => {
+                              const isAdd = line.startsWith('+');
+                              const isSub = line.startsWith('-');
+                              return (
+                                <div 
+                                  key={i} 
+                                  className={`px-2 py-0.5 whitespace-pre ${
+                                    isAdd ? 'bg-severity-low/10 text-severity-low' : 
+                                    isSub ? 'bg-severity-high/10 text-severity-high line-through opacity-70' : 
+                                    'text-dark-300'
+                                  }`}
+                                >
+                                  {line}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
