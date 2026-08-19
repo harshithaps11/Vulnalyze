@@ -54,9 +54,19 @@ export const authApi = {
 
   async logout() {
     localStorage.removeItem('vulnalyze_token');
+    localStorage.removeItem('vulnalyze_role');
   },
 
   isAuthenticated() {
     return Boolean(getStoredToken());
   },
+
+  loginAsDemo(role: 'ADMIN' | 'DEVELOPER') {
+    localStorage.setItem('vulnalyze_token', 'demo_token_123');
+    localStorage.setItem('vulnalyze_role', role);
+  },
+
+  getRole(): 'ADMIN' | 'DEVELOPER' {
+    return (localStorage.getItem('vulnalyze_role') as 'ADMIN' | 'DEVELOPER') || 'ADMIN'; // Default to admin for existing sessions
+  }
 };

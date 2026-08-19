@@ -52,13 +52,13 @@ export const mockUsers: User[] = [
 export const mockScans: Scan[] = [
   {
     id: '1',
-    name: 'E-commerce Platform Scan',
-    target: 'https://example-ecommerce.com',
+    name: 'AWS Cloud Infrastructure Scan',
+    target: 'aws://us-east-1/vpc-prod',
     type: 'dynamic',
     status: 'completed',
     progress: 100,
-    startedAt: '2025-04-15T10:30:00Z',
-    completedAt: '2025-04-15T11:15:00Z',
+    startedAt: '2026-08-14T10:30:00Z',
+    completedAt: '2026-08-14T11:15:00Z',
     vulnerabilityCount: {
       critical: 2,
       high: 4,
@@ -127,53 +127,77 @@ export const mockVulnerabilities: Vulnerability[] = [
   {
     id: '1',
     scanId: '1',
-    title: 'SQL Injection in Login Form',
-    description: 'The login form is vulnerable to SQL injection attacks, allowing attackers to bypass authentication.',
+    title: 'Overly Permissive AWS Security Group in Terraform',
+    description: 'A Terraform configuration exposes port 22 (SSH) and 3389 (RDP) to the public internet (0.0.0.0/0). This allows attackers to attempt brute-force attacks and lateral movement into the cloud network.',
     severity: 'critical',
-    location: '/login.php',
+    location: 'infra/aws/security_groups.tf',
     lineNumber: 42,
     status: 'open',
-    owasp: 'A1:2021-Injection',
-    cwe: 'CWE-89',
+    owasp: 'A05:2021-Security Misconfiguration',
+    cwe: 'CWE-276',
     cvss: '9.8',
-    remediation: 'Use prepared statements or parameterized queries instead of string concatenation.',
+    remediation: 'Restrict ingress rules to specific corporate IP ranges or VPN subnets.',
     assignedTo: mockUsers[1],
-    createdAt: '2025-04-15T10:45:00Z',
-    updatedAt: '2025-04-15T10:45:00Z',
+    createdAt: '2026-08-14T10:45:00Z',
+    updatedAt: '2026-08-14T10:45:00Z',
+    evidence: `resource "aws_security_group" "web_sg" {
+  name        = "web-sg"
+  description = "Allow inbound web and admin traffic"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # VULNERABLE: Open to Internet
+  }
+}`
   },
   {
     id: '2',
     scanId: '1',
-    title: 'Cross-Site Scripting (XSS) in Comment Section',
-    description: 'The comment section does not properly sanitize user input, allowing attackers to inject malicious scripts.',
+    title: 'Kubernetes RBAC Privilege Escalation',
+    description: 'A Kubernetes ClusterRoleBinding grants overly broad permissions (cluster-admin) to a default service account, allowing lateral movement across the cluster.',
     severity: 'high',
-    location: '/products/view.php',
-    lineNumber: 157,
+    location: 'k8s/production/rbac.yaml',
+    lineNumber: 15,
     status: 'in-progress',
-    owasp: 'A3:2021-Injection',
-    cwe: 'CWE-79',
-    cvss: '6.5',
-    remediation: 'Implement proper input validation and output encoding.',
+    owasp: 'A01:2021-Broken Access Control',
+    cwe: 'CWE-269',
+    cvss: '8.5',
+    remediation: 'Implement least privilege by creating a scoped RoleBinding instead of ClusterRoleBinding.',
     assignedTo: mockUsers[2],
-    createdAt: '2025-04-15T10:50:00Z',
-    updatedAt: '2025-04-16T14:22:00Z',
+    createdAt: '2026-08-14T10:50:00Z',
+    updatedAt: '2026-08-14T14:22:00Z',
+    evidence: `apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-binding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: prod
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin # VULNERABLE: Overly broad permissions
+  apiGroup: rbac.authorization.k8s.io`
   },
   {
     id: '3',
     scanId: '1',
-    title: 'Insecure Direct Object Reference (IDOR)',
-    description: 'The application allows users to access other users\' data by manipulating URL parameters.',
+    title: 'Publicly Readable AWS S3 Bucket',
+    description: 'An S3 bucket containing sensitive customer data has ACLs set to public-read, exposing PII to the internet.',
     severity: 'high',
-    location: '/account/details.php',
+    location: 'infra/aws/s3_buckets.tf',
     lineNumber: 88,
     status: 'open',
     owasp: 'A01:2021-Broken Access Control',
-    cwe: 'CWE-639',
-    cvss: '7.1',
-    remediation: 'Implement proper access controls and validate user permissions before displaying data.',
+    cwe: 'CWE-732',
+    cvss: '7.5',
+    remediation: 'Remove public-read ACL and enforce Block Public Access at the account or bucket level.',
     assignedTo: mockUsers[0],
-    createdAt: '2025-04-15T11:05:00Z',
-    updatedAt: '2025-04-15T11:05:00Z',
+    createdAt: '2026-08-14T11:05:00Z',
+    updatedAt: '2026-08-14T11:05:00Z',
   },
   {
     id: '4',

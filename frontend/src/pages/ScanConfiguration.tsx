@@ -16,53 +16,9 @@ export function ScanConfiguration() {
     try {
       const response = await apiClient.post('/scans', {
         target_url: config.url,
-        // Demo source code: contains intentional vulnerabilities so the scanner always finds real results.
-        // In production, users would upload their actual source files.
-        source_code: (() => {
-          // If the user entered custom code in the form, ALWAYS use the user's code!
-          if (config.sourceCode && config.sourceCode.trim()) {
-            return config.sourceCode.trim();
-          }
-
-          // Dynamic scans do NOT use static source code — only dynamic HTTP header checks
-          if (config.type === 'dynamic') return null;
-          
-          // Fallback demo snippets for static/hybrid/ai_security when no code is entered by the user
-          const AI_SECURITY_DEMO = `# === AI SECURITY DEMO: LLM Integration with Vulnerabilities ===
-import openai
-
-# [VULN: Hardcoded API Key] OpenAI key in source code
-openai.api_key = "sk-proj-a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0"
-
-# [VULN: Prompt Injection] Unsanitized user input interpolated into LLM prompt
-def ask_ai(user_message):
-    prompt = f"You are a helpful assistant. User says: {user_message}"
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    # [VULN: Unvalidated LLM Output] Response used directly without sanitization
-    output = response.choices[0].message.content
-    document.getElementById("result").innerHTML = output
-    return output
-`;
-
-          const STATIC_DEMO = `// === DEMO: Intentionally Vulnerable Web App Code ===
-
-// [VULN: XSS] Unsanitized innerHTML assignment
-function renderUserContent(userInput) {
-  document.getElementById("output").innerHTML = userInput;
-}
-
-// [VULN: SQL Injection] String concatenation in query
-function findUser(userId) {
-  const query = "SELECT * FROM users WHERE id = '" + userId + "'";
-  return db.execute(query);
-}
-`;
-
-          return config.type === 'ai_security' ? AI_SECURITY_DEMO : STATIC_DEMO;
-        })(),
+        // Pass the actual user input; empty string if none provided.
+        // No mocked vulnerable code will be injected.
+        source_code: config.sourceCode?.trim() || "",
         scan_type: config.type
       });
       

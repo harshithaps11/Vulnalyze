@@ -8,6 +8,7 @@ import { ScanResults } from './pages/ScanResults';
 import { Team } from './pages/Team';
 import { NotFound } from './pages/NotFound';
 import { RemediationPage } from './pages/RemediationPage';
+import { Campaigns } from './pages/Campaigns';
 import { Profile } from './pages/Profile';
 import { Settings } from './pages/Settings';
 import { Login } from './pages/Login';
@@ -43,6 +44,7 @@ function App() {
             <Route path="/results" element={<ProtectedRoute><ScanResults /></ProtectedRoute>} />
             <Route path="/results/:scanId" element={<ProtectedRoute><ScanResults /></ProtectedRoute>} />
             <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
+            <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
             <Route path="/remediation" element={<ProtectedRoute><RemediationPage /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Navigate to="/results" replace /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

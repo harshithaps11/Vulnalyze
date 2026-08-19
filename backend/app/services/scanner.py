@@ -401,8 +401,59 @@ class ScannerService:
                     }]
 
             headers = {k.lower(): v for k, v in response.headers.items()}
+            html_content = response.text
 
-            # Rule: Missing Content-Security-Policy
+            # --- DYNAMIC DOM SCANNING: ACTIONABLE CLOUD FINDINGS ---
+            
+            # Rule: Exposed AWS S3 Bucket (Cloud Infrastructure Leak)
+            s3_match = re.search(r'(https?://[a-zA-Z0-9.\-_]+\.s3\.amazonaws\.com[^\s\'"<>]+)', html_content)
+            if s3_match:
+                vulnerabilities.append({
+                    'title': 'Exposed AWS S3 Bucket URL (Cloud Infrastructure Leak)',
+                    'description': 'An internal AWS S3 bucket URL was found hardcoded in the frontend DOM. Attackers can scrape this to find unsecured buckets and exfiltrate data.',
+                    'severity': VulnerabilitySeverity.HIGH,
+                    'location': url,
+                    'evidence': f'Found in DOM: {s3_match.group(1)}',
+                    'metadata': {'cweid': '200', 'confidence': 'high', 'scanner': 'dom-scan', 'owasp': 'A05:2021-Security Misconfiguration'}
+                })
+
+            # Rule: Exposed OpenAI/Anthropic API Key in DOM
+            api_key_match = re.search(r'(sk-(?:proj-)?[A-Za-z0-9_\-]{20,})', html_content)
+            if api_key_match:
+                vulnerabilities.append({
+                    'title': 'Hardcoded AI API Key in Client Code',
+                    'description': 'A live AI API key (OpenAI/Anthropic) was found exposed in the client-side JavaScript/HTML. This allows immediate billing theft and quota exhaustion.',
+                    'severity': VulnerabilitySeverity.CRITICAL,
+                    'location': url,
+                    'evidence': f'Found API Key pattern in DOM: {api_key_match.group(1)[:15]}...',
+                    'metadata': {'cweid': '798', 'confidence': 'high', 'scanner': 'dom-scan', 'owasp': 'A02:2021-Cryptographic Failures'}
+                })
+
+            # Rule: Exposed JWT Session Token in DOM
+            jwt_match = re.search(r'(eyJ[a-zA-Z0-9_-]{10,}\.eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,})', html_content)
+            if jwt_match:
+                vulnerabilities.append({
+                    'title': 'Exposed JWT Session Token in DOM',
+                    'description': 'A JSON Web Token (JWT) was found hardcoded in the frontend HTML/JS. Attackers can steal this token to hijack an active session.',
+                    'severity': VulnerabilitySeverity.CRITICAL,
+                    'location': url,
+                    'evidence': f'Found JWT in DOM: {jwt_match.group(1)[:30]}...',
+                    'metadata': {'cweid': '200', 'confidence': 'high', 'scanner': 'dom-scan', 'owasp': 'A01:2021-Broken Access Control'}
+                })
+
+            # Rule: Exposed Admin Portal Routes
+            admin_match = re.search(r'href=[\'"](?:/[a-zA-Z0-9\-_]*)?/(?:wp-admin|admin/login|dashboard/admin)[\'"]', html_content, re.IGNORECASE)
+            if admin_match:
+                vulnerabilities.append({
+                    'title': 'Exposed Administrative Portal Route',
+                    'description': 'A link to an internal administrative portal was found exposed to unauthenticated users. This provides attackers an immediate target for brute-force attacks.',
+                    'severity': VulnerabilitySeverity.MEDIUM,
+                    'location': url,
+                    'evidence': f'Found Admin Link: {admin_match.group(0)}',
+                    'metadata': {'cweid': '425', 'confidence': 'high', 'scanner': 'dom-scan', 'owasp': 'A01:2021-Broken Access Control'}
+                })
+
+            # --- HTTP SECURITY HEADERS SCANNING ---
             if 'content-security-policy' not in headers:
                 vulnerabilities.append({
                     'title': 'Missing Content-Security-Policy Header',

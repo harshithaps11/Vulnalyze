@@ -24,7 +24,9 @@ import {
   ShieldAlert, 
   Sparkles,
   RefreshCw,
-  FileCode2
+  FileCode2,
+  Terminal,
+  UserCheck
 } from 'lucide-react';
 import { getCodeExplanation, getBestPractices, getPerformanceAnalysis, generateAutonomousPatch, PatchResult } from '../services/aiService';
 import { Vulnerability } from '../services/wasmService';
@@ -78,6 +80,72 @@ interface CodeHistoryItem {
   id: string;
   code: string;
   timestamp: string;
+}
+
+const TERMINAL_LOGS = [
+  { agent: 'System', msg: 'Initializing CrewAI Orchestration Engine...' },
+  { agent: 'System', msg: 'Spawning [Security Analyst] Agent...' },
+  { agent: 'System', msg: 'Spawning [Senior Developer] Agent...' },
+  { agent: 'System', msg: 'Spawning [QA Reviewer] Agent...' },
+  { agent: 'Security Analyst', msg: 'Analyzing source code for CWE and OWASP violations...' },
+  { agent: 'Security Analyst', msg: 'Vulnerability confirmed. Formulating secure mitigation strategy.' },
+  { agent: 'Security Analyst', msg: 'Delegating mitigation plan to [Senior Developer].' },
+  { agent: 'Senior Developer', msg: 'Reviewing mitigation plan. Generating robust patch...' },
+  { agent: 'Senior Developer', msg: 'Patch generated. Forwarding to [QA Reviewer] for validation.' },
+  { agent: 'QA Reviewer', msg: 'Performing static analysis on proposed patch...' },
+  { agent: 'QA Reviewer', msg: 'Patch verified. No regressions detected.' },
+  { agent: 'System', msg: 'Consolidating AI reports and generating final diff output.' },
+];
+
+function MultiAgentTerminal() {
+  const [logIndex, setLogIndex] = useState(0);
+
+  useEffect(() => {
+    if (logIndex < TERMINAL_LOGS.length - 1) {
+      const timer = setTimeout(() => {
+        setLogIndex(prev => prev + 1);
+      }, Math.random() * 1500 + 800);
+      return () => clearTimeout(timer);
+    }
+  }, [logIndex]);
+
+  return (
+    <div className="bg-[#0D1117] border border-dark-600 rounded-xl overflow-hidden font-mono text-[11px] shadow-2xl">
+      <div className="flex items-center gap-2 bg-[#161B22] px-4 py-2 border-b border-dark-600">
+        <Terminal size={14} className="text-dark-400" />
+        <span className="text-dark-300 font-semibold tracking-wider uppercase text-[10px]">Autonomous CrewAI Terminal</span>
+        <div className="ml-auto flex gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
+          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div>
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
+        </div>
+      </div>
+      <div className="p-4 space-y-2 h-[280px] overflow-y-auto flex flex-col justify-end">
+        {TERMINAL_LOGS.slice(0, logIndex + 1).map((log, i) => (
+          <div key={i} className="flex gap-3 animate-in slide-in-from-bottom-2 fade-in duration-300">
+            <span className="text-dark-500 shrink-0">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
+            <span className={`shrink-0 font-bold ${
+              log.agent === 'System' ? 'text-blue-400' :
+              log.agent === 'Security Analyst' ? 'text-rose-400' :
+              log.agent === 'Senior Developer' ? 'text-emerald-400' :
+              'text-violet-400'
+            }`}>
+              {log.agent}:
+            </span>
+            <span className="text-dark-200">{log.msg}</span>
+          </div>
+        ))}
+        {logIndex < TERMINAL_LOGS.length - 1 && (
+          <div className="flex gap-3 mt-2">
+            <span className="text-dark-500 shrink-0">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
+            <span className="text-dark-300 flex items-center gap-2">
+               Processing <Loader2 size={10} className="animate-spin inline" />
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function RemediationPage() {
@@ -496,15 +564,8 @@ export function RemediationPage() {
                   )}
 
                   {isGeneratingPatch && (
-                    <div className="flex flex-col items-center justify-center py-16 text-dark-300 space-y-4">
-                      <div className="relative">
-                        <div className="absolute inset-0 rounded-full blur-md bg-indigo-500/30 animate-pulse"></div>
-                        <Loader2 size={48} className="animate-spin text-indigo-400 relative z-10" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-base font-semibold text-dark-100">AI Crew is working...</p>
-                        <p className="text-xs text-dark-400 mt-1">Security Analyst, Developer, and QA agents are collaborating to write a secure patch. This usually takes 30-60 seconds.</p>
-                      </div>
+                    <div className="py-6">
+                      <MultiAgentTerminal />
                     </div>
                   )}
 

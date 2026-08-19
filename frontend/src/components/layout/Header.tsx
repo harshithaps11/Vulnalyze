@@ -14,7 +14,8 @@ import {
   Bell,
   Code,
   Sun,
-  Moon
+  Moon,
+  Rocket
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { currentUser } from '../../data/mockData';
@@ -44,17 +45,21 @@ export function Header() {
 
   const handleLogout = async () => {
     await authApi.logout();
-    navigate('/login');
+    window.location.href = '/login';
   };
   
+  const userRole = authApi.getRole();
+  const dynamicUserName = userRole === 'ADMIN' ? 'Admin Manager' : 'Developer (Demo)';
+
   const navItems = [
-    { name: 'Dashboard', icon: <BarChart2 size={20} />, path: '/' },
-    { name: 'Scan', icon: <Search size={20} />, path: '/scan' },
-    { name: 'Reports', icon: <FileText size={20} />, path: '/reports' },
-    { name: 'Team', icon: <Users size={20} />, path: '/team' },
-    { name: 'Remediation', icon: <Code size={20} />, path: '/remediation' },
-    { name: 'Settings', icon: <Settings size={20} />, path: '/settings' },
-  ];
+    { name: 'Dashboard', icon: <BarChart2 size={20} />, path: '/', roles: ['ADMIN', 'DEVELOPER'] },
+    { name: 'Scan', icon: <Search size={20} />, path: '/scan', roles: ['ADMIN'] },
+    { name: 'Campaigns', icon: <Rocket size={20} />, path: '/campaigns', roles: ['ADMIN'] },
+    { name: 'Reports', icon: <FileText size={20} />, path: '/reports', roles: ['ADMIN'] },
+    { name: 'Team Hub', icon: <Users size={20} />, path: '/team', roles: ['ADMIN', 'DEVELOPER'] },
+    { name: 'Remediation', icon: <Code size={20} />, path: '/remediation', roles: ['ADMIN', 'DEVELOPER'] },
+    { name: 'Settings', icon: <Settings size={20} />, path: '/settings', roles: ['ADMIN', 'DEVELOPER'] },
+  ].filter(item => item.roles.includes(userRole));
 
   return (
     <header className="bg-dark-800 border-b border-dark-700 sticky top-0 z-50 transition-colors duration-200">
@@ -65,6 +70,13 @@ export function Header() {
             <Link to="/" className="flex items-center gap-2">
               <Shield className="h-8 w-8 text-primary-500" />
               <span className="text-xl font-bold text-dark-100">Vulnalyze</span>
+              <span className={`ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                userRole === 'ADMIN' 
+                  ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30' 
+                  : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+              }`}>
+                {userRole}
+              </span>
             </Link>
           </div>
 
@@ -111,7 +123,7 @@ export function Header() {
                   size="sm"
                   status="online"
                 />
-                <span className="hidden md:block text-sm font-medium text-dark-100">{currentUser.name}</span>
+                <span className="hidden md:block text-sm font-medium text-dark-100">{dynamicUserName}</span>
                 <ChevronDown className="h-4 w-4 text-dark-400" />
               </button>
               
@@ -119,8 +131,8 @@ export function Header() {
                 <div className="absolute right-0 mt-2 w-48 rounded-md bg-dark-800 border border-dark-700 shadow-lg">
                   <div className="py-1">
                     <div className="px-4 py-2 border-b border-dark-700">
-                      <p className="text-sm font-medium text-dark-100">{currentUser.name}</p>
-                      <p className="text-xs text-dark-400">{currentUser.email}</p>
+                      <p className="text-sm font-medium text-dark-100">{dynamicUserName}</p>
+                      <p className="text-xs text-dark-400">{userRole === 'ADMIN' ? 'admin@vulnalyze.com' : 'dev@vulnalyze.com'}</p>
                     </div>
                     <Link to="/profile" className="block px-4 py-2 text-sm text-dark-300 hover:bg-dark-700 hover:text-dark-100">
                       Your Profile

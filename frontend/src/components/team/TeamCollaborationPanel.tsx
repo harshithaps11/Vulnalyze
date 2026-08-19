@@ -19,7 +19,7 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { formatDate } from '../../lib/utils';
-import { apiClient } from '../../services/apiClient';
+import { apiClient, authApi } from '../../services/apiClient';
 import { useNavigate } from 'react-router-dom';
 
 interface TeamMember {
@@ -58,6 +58,8 @@ export function TeamCollaborationPanel() {
   // Real backend findings for task assignment board
   const [scanFindings, setScanFindings] = useState<any[]>([]);
   const [loadingFindings, setLoadingFindings] = useState(false);
+  
+  const userRole = authApi.getRole();
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   
   // Selection state for split-pane Triage Hub
@@ -252,7 +254,7 @@ export function TeamCollaborationPanel() {
             </button>
           </div>
 
-          {activeTab === 'roster' && (
+          {activeTab === 'roster' && userRole === 'ADMIN' && (
             <Button
               variant="primary"
               size="sm"
@@ -357,18 +359,24 @@ export function TeamCollaborationPanel() {
 
                       <div className="flex items-center justify-between bg-dark-700/30 p-3 rounded-lg border border-dark-600/30">
                         <span className="text-sm font-medium text-dark-200">Assignment</span>
-                        <select
-                          className="input text-xs w-48 py-1.5"
-                          value={assignments[String(selectedVuln.id)] || ''}
-                          onChange={e => handleAssignTask(String(selectedVuln.id), e.target.value)}
-                        >
-                          <option value="">Unassigned</option>
-                          {members.map(m => (
-                            <option key={m.id} value={m.id}>
-                              {m.name} ({m.role.replace('_', ' ')})
-                            </option>
-                          ))}
-                        </select>
+                        {userRole === 'ADMIN' ? (
+                          <select
+                            className="input text-xs w-48 py-1.5"
+                            value={assignments[String(selectedVuln.id)] || ''}
+                            onChange={e => handleAssignTask(String(selectedVuln.id), e.target.value)}
+                          >
+                            <option value="">Unassigned</option>
+                            {members.map(m => (
+                              <option key={m.id} value={m.id}>
+                                {m.name} ({m.role.replace('_', ' ')})
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="text-xs font-semibold text-primary-400">
+                            {assignments[String(selectedVuln.id)] ? members.find(m => m.id === assignments[String(selectedVuln.id)])?.name : 'Unassigned'}
+                          </span>
+                        )}
                       </div>
                     </div>
 
